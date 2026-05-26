@@ -1,184 +1,104 @@
-"use client";
+'use client';
 
-import { useState, KeyboardEvent, RefObject } from "react";
-import { ChatMessage, Question } from "@/types";
-import QuestionBox from "@/components/QuestionBox";
-import ClueBox from "@/components/ClueBox";
-import { FALLBACK_OPTIONS } from "@/lib/constants";
+import { useState } from 'react';
 
 interface ChatInterfaceProps {
-  messages: ChatMessage[];
-  currentQuestion: Question | null;
-  clueIndex: number;
-  showFallback: boolean;
-  isLoading: boolean;
-  onSend: (message: string) => void;
-  onFallbackAction: (action: string) => void;
-  bottomRef: RefObject<HTMLDivElement>;
+  mode: 'Practice' | 'PR';
 }
 
-export default function ChatInterface({
-  messages,
-  currentQuestion,
-  clueIndex,
-  showFallback,
-  isLoading,
-  onSend,
-  onFallbackAction,
-  bottomRef,
-}: ChatInterfaceProps) {
-  const [input, setInput] = useState("");
+export default function ChatInterface({ mode }: ChatInterfaceProps) {
+  const [messages, setMessages] = useState<{ sender: 'user' | 'ai'; text: string }[]>([
+    { sender: 'ai', text: 'Halo! Aku Ai Mi, teman belajar matematikamu 😊\nUntuk memulai sesi belajar, ketik pesan seperti ini:\n"Halo Ai Mi, saya kelas 1, topik Penjumlahan. Siap belajar dengan bahasa Indonesia"\nAku siap menemani belajar! 😊' }
+  ]);
+  const [input, setInput] = useState('');
+  const [question, setQuestion] = useState<{ text: string; answer: number; clueIndex: number } | null>(null);
+  const [clueCount, setClueCount] = useState(0);
 
   const handleSend = () => {
-    if (!input.trim() || isLoading) return;
-    onSend(input.trim());
-    setInput("");
-  };
+    if (!input.trim()) return;
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+    const userMsg = input.trim();
+    setMessages(prev => [...prev, { sender: 'user', text: userMsg }]);
+
+    // Deteksi trigger
+    const triggerRegex = /Halo Ai Mi, saya kelas \d+, topik (\w+). Siap belajar dengan bahasa \w+/i;
+    const match = userMsg.match(triggerRegex);
+    if (match && match[1].toLowerCase() === 'penjumlahan') {
+      // Mulai soal
+      setQuestion({ text: 'Berapakah 2 + 3?', answer: 5, clueIndex: 0 });
+      setClueCount(0);
+      setMessages(prev => [...prev, { sender: 'ai', text: 'Baik, mari kita mulai! Soal: Berapakah 2 + 3?' }]);
+    } 
+    else if (question) {
+      // Cek jawaban
+      const userAnswer = parseInt(userMsg);
+      if (isNaN(userAnswer)) {
+        setMessages(prev => [...prev, { sender: 'ai', text: 'Ketik angka ya, misal: 5' }]);
+      } else if (userAnswer === question.answer) {
+        setMessages(prev => [...prev, { sender: 'ai', text: '⭐ Hebat! Jawabanmu benar! 🎉' }]);
+        setQuestion(null);
+        setClueCount(0);
+      } else {
+        // Jawaban salah, beri petunjuk
+        const clues = [
+          'Coba hitung menggunakan jari. Berapa 2 jari ditambah 3 jari?',
+          'Angka 2 dan 3, jika digabung menjadi berapa?',
+          '2 + 3 sama dengan 5, coba ketik 5.',
+          'Bayangkan kamu punya 2 permen, lalu diberi 3 permen. Berapa total permenmu?',
+          'Hitung mundur dari 5: 5,4,3,2,1. Nah, 2+3 adalah angka pertama dari hitungan itu.'
+        ];
+        const newClueCount = clueCount + 1;
+        setClueCount(newClueCount);
+        if (newClueCount <= 5) {
+          setMessages(prev => [...prev, { sender: 'ai', text: `Belum tepat. Petunjuk ${newClueCount}: ${clues[newClueCount-1]}` }]);
+        }
+        if (newClueCount === 5) {
+          // Setelah 5 petunjuk, tampilkan pilihan
+          setMessages(prev => [...prev, { sender: 'ai', text: 'Sepertinya soal ini sulit. Pilih:\n1️⃣ Ganti soal lain\n2️⃣ Coba lagi (Ai Mi terus bimbing)\n3️⃣ Minta bantuan orang tua/guru\n\nKetik 1, 2, atau 3' }]);
+        }
+        if (newClueCount > 5) {
+          // handle pilihan
+          if (userMsg === '1') {
+            setMessages(prev => [...prev, { sender: 'ai', text: 'Baik, ganti soal lain (fitur sedang dikembangkan untuk Sprint 2).' }]);
+            setQuestion(null);
+            setClueCount(0);
+          } else if (userMsg === '2') {
+            setMessages(prev => [...prev, { sender: 'ai', text: 'Ayo coba lagi. ' + clues[4] }]);
+            setClueCount(4); // reset ke petunjuk ke-5? biarkan saja
+          } else if (userMsg === '3') {
+            setMessages(prev => [...prev, { sender: 'ai', text: 'Baik, akan kusimpan untuk didiskusikan dengan orang tua.' }]);
+            setQuestion(null);
+            setClueCount(0);
+          }
+        }
+      }
+    } 
+    else {
+      setMessages(prev => [...prev, { sender: 'ai', text: 'Untuk mulai belajar, kirim pesan seperti: "Halo Ai Mi, saya kelas 1, topik Penjumlahan. Siap belajar dengan bahasa Indonesia"' }]);
     }
-  };
 
-  const formatContent = (content: string) => {
-    return content.split("\n").map((line, i) => {
-      const parts = line.split(/\*\*(.*?)\*\*/g);
-      return (
-        <span key={i}>
-          {parts.map((part, j) =>
-            j % 2 === 1 ? (
-              <strong key={j} className="font-semibold">
-                {part}
-              </strong>
-            ) : (
-              <span key={j}>{part}</span>
-            )
-          )}
-          {i < content.split("\n").length - 1 && <br />}
-        </span>
-      );
-    });
+    setInput('');
   };
 
   return (
-    <div className="card flex flex-col gap-3 p-0 overflow-hidden">
-      <div className="px-4 pt-4 pb-2 border-b border-gray-100 flex items-center gap-2">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center shadow-sm">
-          <span className="text-white text-sm font-bold">AI</span>
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-gray-800">Ai Mi</p>
-          <p className="text-xs text-green-500 font-medium">● Online</p>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3 px-4 py-2 chat-height overflow-y-auto scrollbar-thin">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex flex-col gap-1 ${
-              msg.role === "user" ? "items-end" : "items-start"
-            }`}
-          >
-            {msg.role === "ai" && (
-              <span className="text-xs text-gray-400 ml-1">Ai Mi</span>
-            )}
-            <div
-              className={
-                msg.role === "ai" ? "chat-bubble-ai" : "chat-bubble-user"
-              }
-            >
-              <p className="text-sm leading-relaxed">
-                {formatContent(msg.content)}
-              </p>
-            </div>
-            <span className="text-xs text-gray-300 mx-1">
-              {msg.timestamp.toLocaleTimeString("id-ID", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
+    <div className="flex flex-col h-full max-w-2xl mx-auto p-4">
+      <div className="flex-1 overflow-y-auto space-y-2 mb-4">
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`p-2 rounded-lg ${msg.sender === 'user' ? 'bg-blue-100 text-right' : 'bg-gray-100'}`}>
+            <strong>{msg.sender === 'user' ? 'Saya' : 'Ai Mi'}:</strong> {msg.text}
           </div>
         ))}
-
-        {currentQuestion && (
-          <div className="flex flex-col items-start gap-2">
-            <QuestionBox question={currentQuestion} />
-            {clueIndex > 0 && (
-              <ClueBox
-                clues={currentQuestion.clues}
-                activeIndex={clueIndex - 1}
-              />
-            )}
-          </div>
-        )}
-
-        {showFallback && (
-          <div className="flex flex-col gap-2 animate-fade-in">
-            <p className="text-xs text-gray-400 ml-1">Ai Mi</p>
-            <div className="chat-bubble-ai flex flex-col gap-2">
-              <p className="text-sm font-medium text-gray-700 mb-1">
-                Pilih langkah berikutnya:
-              </p>
-              {FALLBACK_OPTIONS.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => onFallbackAction(option.label)}
-                  className="btn-option text-sm"
-                >
-                  {option.emoji} {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="flex items-start gap-2 animate-fade-in">
-            <div className="chat-bubble-ai flex items-center gap-1.5 py-3">
-              <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0ms]"></span>
-              <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:150ms]"></span>
-              <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:300ms]"></span>
-            </div>
-          </div>
-        )}
-
-        <div ref={bottomRef} />
       </div>
-
-      <div className="px-4 pb-4 pt-2 border-t border-gray-100 flex gap-2 items-end">
+      <div className="flex gap-2">
         <textarea
+          className="flex-1 border rounded p-2"
+          rows={2}
+          placeholder="Ketik pesanmu di sini..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ketik pesanmu di sini... (Enter untuk kirim)"
-          rows={1}
-          className="input-chat"
-          style={{ minHeight: "44px", maxHeight: "120px" }}
-          onInput={(e) => {
-            const target = e.target as HTMLTextAreaElement;
-            target.style.height = "auto";
-            target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
-          }}
-          disabled={isLoading}
+          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
         />
-        <button
-          onClick={handleSend}
-          disabled={!input.trim() || isLoading}
-          className="btn-primary flex items-center justify-center w-11 h-11 px-0 py-0 shrink-0"
-          aria-label="Kirim pesan"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="w-5 h-5"
-          >
-            <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-          </svg>
-        </button>
+        <button onClick={handleSend} className="bg-green-500 text-white px-4 py-2 rounded">Kirim</button>
       </div>
     </div>
   );
