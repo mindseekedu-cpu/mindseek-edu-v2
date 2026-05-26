@@ -2,13 +2,9 @@
 
 import { useState } from 'react';
 
-interface ChatInterfaceProps {
-  mode: 'Practice' | 'PR';
-}
-
-export default function ChatInterface({ mode }: ChatInterfaceProps) {
+export default function ChatInterface() {
   const [messages, setMessages] = useState<{ sender: 'user' | 'ai'; text: string }[]>([
-    { sender: 'ai', text: 'Halo! Aku Ai Mi, teman belajar matematikamu 😊\nUntuk memulai sesi belajar, ketik pesan seperti ini:\n"Halo Ai Mi, saya kelas 1, topik Penjumlahan. Siap belajar dengan bahasa Indonesia"\nAku siap menemani belajar! 😊' }
+    { sender: 'ai', text: 'Halo! Aku Ai Mi, teman belajar matematikamu 😊\n\nUntuk memulai sesi belajar, ketik pesan seperti ini:\n"Halo Ai Mi, saya kelas 1, topik Penjumlahan. Siap belajar dengan bahasa Indonesia"\n\nAku siap menemani belajar! 😊' }
   ]);
   const [input, setInput] = useState('');
   const [question, setQuestion] = useState<{ text: string; answer: number; clueIndex: number } | null>(null);
@@ -20,17 +16,15 @@ export default function ChatInterface({ mode }: ChatInterfaceProps) {
     const userMsg = input.trim();
     setMessages(prev => [...prev, { sender: 'user', text: userMsg }]);
 
-    // Deteksi trigger
     const triggerRegex = /Halo Ai Mi, saya kelas \d+, topik (\w+). Siap belajar dengan bahasa \w+/i;
     const match = userMsg.match(triggerRegex);
+    
     if (match && match[1].toLowerCase() === 'penjumlahan') {
-      // Mulai soal
       setQuestion({ text: 'Berapakah 2 + 3?', answer: 5, clueIndex: 0 });
       setClueCount(0);
       setMessages(prev => [...prev, { sender: 'ai', text: 'Baik, mari kita mulai! Soal: Berapakah 2 + 3?' }]);
     } 
     else if (question) {
-      // Cek jawaban
       const userAnswer = parseInt(userMsg);
       if (isNaN(userAnswer)) {
         setMessages(prev => [...prev, { sender: 'ai', text: 'Ketik angka ya, misal: 5' }]);
@@ -39,7 +33,6 @@ export default function ChatInterface({ mode }: ChatInterfaceProps) {
         setQuestion(null);
         setClueCount(0);
       } else {
-        // Jawaban salah, beri petunjuk
         const clues = [
           'Coba hitung menggunakan jari. Berapa 2 jari ditambah 3 jari?',
           'Angka 2 dan 3, jika digabung menjadi berapa?',
@@ -53,18 +46,15 @@ export default function ChatInterface({ mode }: ChatInterfaceProps) {
           setMessages(prev => [...prev, { sender: 'ai', text: `Belum tepat. Petunjuk ${newClueCount}: ${clues[newClueCount-1]}` }]);
         }
         if (newClueCount === 5) {
-          // Setelah 5 petunjuk, tampilkan pilihan
           setMessages(prev => [...prev, { sender: 'ai', text: 'Sepertinya soal ini sulit. Pilih:\n1️⃣ Ganti soal lain\n2️⃣ Coba lagi (Ai Mi terus bimbing)\n3️⃣ Minta bantuan orang tua/guru\n\nKetik 1, 2, atau 3' }]);
         }
         if (newClueCount > 5) {
-          // handle pilihan
           if (userMsg === '1') {
-            setMessages(prev => [...prev, { sender: 'ai', text: 'Baik, ganti soal lain (fitur sedang dikembangkan untuk Sprint 2).' }]);
+            setMessages(prev => [...prev, { sender: 'ai', text: 'Baik, ganti soal lain (fitur Sprint 2).' }]);
             setQuestion(null);
             setClueCount(0);
           } else if (userMsg === '2') {
             setMessages(prev => [...prev, { sender: 'ai', text: 'Ayo coba lagi. ' + clues[4] }]);
-            setClueCount(4); // reset ke petunjuk ke-5? biarkan saja
           } else if (userMsg === '3') {
             setMessages(prev => [...prev, { sender: 'ai', text: 'Baik, akan kusimpan untuk didiskusikan dengan orang tua.' }]);
             setQuestion(null);
@@ -74,7 +64,7 @@ export default function ChatInterface({ mode }: ChatInterfaceProps) {
       }
     } 
     else {
-      setMessages(prev => [...prev, { sender: 'ai', text: 'Untuk mulai belajar, kirim pesan seperti: "Halo Ai Mi, saya kelas 1, topik Penjumlahan. Siap belajar dengan bahasa Indonesia"' }]);
+      setMessages(prev => [...prev, { sender: 'ai', text: 'Untuk mulai belajar, kirim pesan seperti:\n"Halo Ai Mi, saya kelas 1, topik Penjumlahan. Siap belajar dengan bahasa Indonesia"' }]);
     }
 
     setInput('');
@@ -93,7 +83,7 @@ export default function ChatInterface({ mode }: ChatInterfaceProps) {
         <textarea
           className="flex-1 border rounded p-2"
           rows={2}
-          placeholder="Ketik pesanmu di sini..."
+          placeholder="Ketik pesanmu di sini... (Enter untuk kirim)"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
