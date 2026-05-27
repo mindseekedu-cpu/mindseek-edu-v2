@@ -1,7 +1,9 @@
 {
   "name": "mindseek-edu",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
-    "busboy": "^1.6.0"
+    "busboy": "^1.6.0",
+    "@supabase/supabase-js": "^2.39.0"
   }
 }
