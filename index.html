@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>MindSeek.edu – Ai Mi, Guru Pribadimu</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, 'Segoe UI', 'Roboto', sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #e9eef5 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    /* Header */
+    .header {
+      background: white;
+      border-radius: 28px;
+      padding: 20px 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    h1 {
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.3px;
+    }
+    .badge {
+      background: #f0f2f5;
+      padding: 8px 16px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      color: #2c3e66;
+    }
+    /* Controls */
+    .controls {
+      background: white;
+      border-radius: 28px;
+      padding: 20px 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: flex-end;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 130px;
+    }
+    .control-group label {
+      font-weight: 600;
+      font-size: 0.75rem;
+      color: #4a5b7a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    select, input, button {
+      padding: 10px 14px;
+      border-radius: 60px;
+      border: 1px solid #cfdfed;
+      background: white;
+      font-size: 0.9rem;
+      outline: none;
+      transition: 0.2s;
+    }
+    select:focus, input:focus, button:focus {
+      border-color: #2a5298;
+      box-shadow: 0 0 0 2px rgba(42,82,152,0.2);
+    }
+    button {
+      background: #1e3c72;
+      color: white;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 10px 20px;
+    }
+    button:active {
+      transform: scale(0.97);
+    }
+    button.secondary {
+      background: #e9ecef;
+      color: #1e3c72;
+      border: 1px solid #cbd5e1;
+    }
+    .flex-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    /* Chat area */
+    .chat-panel {
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .chat-messages {
+      height: 400px;
+      overflow-y: auto;
+      padding: 20px;
+      background: #fafcff;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .message {
+      max-width: 80%;
+      padding: 12px 18px;
+      border-radius: 24px;
+      line-height: 1.4;
+      font-size: 0.95rem;
+      animation: fadeIn 0.2s ease;
+    }
+    .user {
+      align-self: flex-end;
+      background: #1e3c72;
+      color: white;
+      border-bottom-right-radius: 6px;
+    }
+    .ai {
+      align-self: flex-start;
+      background: #f0f2f8;
+      color: #1a2a4f;
+      border-bottom-left-radius: 6px;
+    }
+    .chat-input-area {
+      display: flex;
+      gap: 12px;
+      padding: 16px 20px;
+      border-top: 1px solid #e2edf7;
+      background: white;
+    }
+    .chat-input-area input {
+      flex: 1;
+      border-radius: 60px;
+    }
+    .file-label {
+      background: #eef2f9;
+      padding: 10px 16px;
+      border-radius: 60px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 8px;
+      font-style: italic;
+      color: #2a5298;
+    }
+    /* Parent panel */
+    .parent-panel {
+      background: white;
+      border-radius: 28px;
+      padding: 20px;
+      margin-top: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      transition: 0.2s;
+    }
+    .parent-panel.hidden {
+      display: none;
+    }
+    .summary-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin: 16px 0;
+    }
+    .stat-card {
+      background: #f8fafd;
+      border-radius: 20px;
+      padding: 12px 20px;
+      flex: 1;
+      min-width: 120px;
+    }
+    pre {
+      background: #f0f4f9;
+      padding: 12px;
+      border-radius: 16px;
+      overflow-x: auto;
+      font-size: 0.8rem;
+    }
+    hr {
+      margin: 16px 0;
+      border: none;
+      border-top: 1px solid #dce5ef;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    @media (max-width: 700px) {
+      .controls { flex-direction: column; align-items: stretch; }
+      .message { max-width: 95%; }
+      body { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🧠 MindSeek.edu – Ai Mi, Guru Pribadimu</h1>
+    <div class="badge">✨ Belajar jadi lebih mandiri ✨</div>
+  </div>
+
+  <!-- Kontrol utama -->
+  <div class="controls">
+    <div class="control-group">
+      <label>Kelas</label>
+      <select id="gradeSelect">
+        <option value="1">Kelas 1</option><option value="2">Kelas 2</option>
+        <option value="3">Kelas 3</option><option value="4">Kelas 4</option>
+        <option value="5">Kelas 5</option><option value="6">Kelas 6</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Mata Pelajaran</label>
+      <select id="subjectSelect">
+        <option value="Matematika">Matematika</option>
+        <option value="Sains_Nasional">Sains Nasional (IPAS)</option>
+        <option value="Sains_Internasional">Sains Internasional (Cambridge)</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Mode</label>
+      <select id="modeSelect">
+        <option value="pr">PR (Petunjuk)</option>
+        <option value="practice">Practice (Latihan)</option>
+        <option value="exam">Exam (Ujian)</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Bahasa</label>
+      <select id="languageSelect">
+        <option value="id">Bahasa Indonesia</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>User ID (anak)</label>
+      <input type="text" id="userIdInput" value="demo001" placeholder="ID Anak">
+    </div>
+    <div class="flex-row">
+      <button id="parentModeBtn" class="secondary">👪 Mode Orang Tua (Laporan)</button>
+    </div>
+  </div>
+
+  <!-- Chat Area -->
+  <div class="chat-panel">
+    <div class="chat-messages" id="chatMessages">
+      <div class="message ai">👋 Halo! Aku Ai Mi, siap membantu belajar. Pilih kelas, mapel, dan mode, lalu tanya atau kirim tugas ya!</div>
+    </div>
+    <div class="loading" id="loadingIndicator">🤖 Ai Mi sedang mengetik ...</div>
+    <div class="chat-input-area">
+      <input type="text" id="messageInput" placeholder="Tanya atau jawab soal ...">
+      <label class="file-label" id="uploadLabel">📎 Upload (gambar/PDF)
+        <input type="file" id="fileInput" accept="image/*,application/pdf" style="display: none;">
+      </label>
+      <button id="sendBtn">Kirim ✨</button>
+    </div>
+  </div>
+
+  <!-- Parent Panel (laporan) -->
+  <div id="parentPanel" class="parent-panel hidden">
+    <h3>📊 Laporan Perkembangan Anak</h3>
+    <div id="summaryContent">Memuat laporan...</div>
+    <button id="closeParentBtn" class="secondary">Tutup</button>
+  </div>
+</div>
+
+<script>
+  // State
+  let sessionId = localStorage.getItem('mindseek_sessionId');
+  if (!sessionId) {
+    sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+    localStorage.setItem('mindseek_sessionId', sessionId);
+  }
+
+  const DOM = {
+    grade: document.getElementById('gradeSelect'),
+    subject: document.getElementById('subjectSelect'),
+    mode: document.getElementById('modeSelect'),
+    language: document.getElementById('languageSelect'),
+    userId: document.getElementById('userIdInput'),
+    chatMessages: document.getElementById('chatMessages'),
+    msgInput: document.getElementById('messageInput'),
+    sendBtn: document.getElementById('sendBtn'),
+    fileInput: document.getElementById('fileInput'),
+    loading: document.getElementById('loadingIndicator'),
+    parentBtn: document.getElementById('parentModeBtn'),
+    parentPanel: document.getElementById('parentPanel'),
+    summaryContent: document.getElementById('summaryContent'),
+    closeParentBtn: document.getElementById('closeParentBtn')
+  };
+
+  let pendingOcrText = null;
+
+  // Helper: append message
+  function addMessage(text, isUser = false) {
+    const div = document.createElement('div');
+    div.className = `message ${isUser ? 'user' : 'ai'}`;
+    div.innerText = text;
+    DOM.chatMessages.appendChild(div);
+    DOM.chatMessages.scrollTop = DOM.chatMessages.scrollHeight;
+  }
+
+  // Show/hide loading
+  function setLoading(loading) {
+    DOM.loading.style.display = loading ? 'block' : 'none';
+  }
+
+  // Panggil API chat
+  async function sendToAI(userMessage, ocrText = null) {
+    const mode = DOM.mode.value;
+    const grade = DOM.grade.value;
+    const subject = DOM.subject.value;
+    const language = DOM.language.value;
+    const userId = DOM.userId.value.trim() || 'demo001';
+
+    let finalMessage = userMessage;
+    if (ocrText) {
+      finalMessage = userMessage ? `${userMessage}\n\n[OCR]: ${ocrText}` : `[Hasil scan]: ${ocrText}`;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode, grade, topic: subject, // topic diisi subject sementara, backend bisa mapping
+          subject: subject,
+          language, message: finalMessage,
+          sessionId: sessionId,
+          userId: userId
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Gagal mendapatkan jawaban');
+      }
+      addMessage(data.reply, false);
+    } catch (err) {
+      console.error(err);
+      addMessage('⚠️ Maaf, Ai Mi sedang sibuk. Coba lagi nanti.', false);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Upload file ke OCR
+  async function uploadAndOCR(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    setLoading(true);
+    try {
+      const res = await fetch('/api/ocr', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      return data.text;
+    } catch (err) {
+      console.error(err);
+      addMessage('❌ Gagal membaca gambar/PDF. Pastikan file jelas dan coba lagi.', false);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Cek unlock exam
+  async function checkExamUnlock() {
+    const grade = DOM.grade.value;
+    const userId = DOM.userId.value.trim() || 'demo001';
+    const subject = DOM.subject.value;
+    try {
+      const res = await fetch(`/api/exam-unlock?userId=${userId}&grade=${grade}&subject=${subject}`);
+      const data = await res.json();
+      if (!res.ok) return false;
+      if (!data.unlocked) {
+        alert(`⚠️ ${data.message || 'Belum bisa ujian. Selesaikan dulu semua topik minimal 80% mandiri.'}`);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn(err);
+      return false;
+    }
+  }
+
+  // Kirim pesan utama
+  async function onSendMessage() {
+    let userMsg = DOM.msgInput.value.trim();
+    if (!userMsg && !pendingOcrText) {
+      addMessage('Silakan tulis pesan atau upload gambar.', true);
+      return;
+    }
+    if (userMsg) addMessage(userMsg, true);
+    const ocrText = pendingOcrText;
+    pendingOcrText = null;
+    // Reset file input
+    DOM.fileInput.value = '';
+    // Mode Exam: cek unlock sebelum kirim
+    if (DOM.mode.value === 'exam') {
+      const unlocked = await checkExamUnlock();
+      if (!unlocked) {
+        addMessage('🔒 Ujian belum dapat diakses. Selesaikan semua topik di mata pelajaran ini dengan tingkat kemandirian ≥80%.', false);
+        DOM.msgInput.value = '';
+        return;
+      }
+    }
+    await sendToAI(userMsg, ocrText);
+    DOM.msgInput.value = '';
+  }
+
+  // Handler upload file
+  DOM.fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['jpg','jpeg','png','pdf'].includes(ext)) {
+      addMessage('⚠️ Hanya gambar (jpg/png) atau PDF yang didukung.', false);
+      return;
+    }
+    addMessage(`📎 Mengupload ${file.name} ...`, true);
+    const extractedText = await uploadAndOCR(file);
+    if (extractedText) {
+      pendingOcrText = extractedText;
+      addMessage(`📄 Hasil scan: "${extractedText.substring(0, 150)}${extractedText.length>150 ? '…' : ''}"`, false);
+      addMessage('Ketik pesan atau langsung kirim untuk melanjutkan.', false);
+    } else {
+      pendingOcrText = null;
+    }
+  });
+
+  // Parent mode: show learning summary
+  async function showLearningSummary() {
+    const userId = DOM.userId.value.trim() || 'demo001';
+    DOM.summaryContent.innerHTML = 'Memuat laporan...';
+    DOM.parentPanel.classList.remove('hidden');
+    try {
+      const res = await fetch(`/api/learning-summary?userId=${userId}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      // Render ringkasan sederhana
+      let html = `<div class="summary-stats">
+        <div class="stat-card">📚 Total soal: ${data.summary.totalQuestions}</div>
+        <div class="stat-card">🎯 Rata-rata mandiri: ${Math.round(data.summary.averageIndependence*100)}%</div>
+        <div class="stat-card">🏆 Topik dikuasai: ${data.summary.totalTopicsMastered} / ${data.summary.totalTopicsPracticed}</div>
+      </div>`;
+      html += `<h4>📖 Progress per Topik</h4><ul>`;
+      data.topicsProgress.slice(0, 15).forEach(t => {
+        html += `<li><strong>${t.topic}</strong> (kelas ${t.grade}) – ${Math.round(t.independentPercent*100)}% mandiri, status: ${t.status}</li>`;
+      });
+      html += `</ul><h4>⏳ Butuh pendampingan (${data.pendingGuidance.length})</h4><ul>`;
+      data.pendingGuidance.forEach(g => {
+        html += `<li>${g.questionText.substring(0, 80)} (${g.topic})</li>`;
+      });
+      html += `</ul><h4>📅 Sesi terakhir</h4><ul>`;
+      data.recentSessions.slice(0, 5).forEach(s => {
+        html += `<li>${new Date(s.timestamp).toLocaleString()} – ${s.sessionType} | benar mandiri: ${s.independentCount}/${s.totalQuestions}</li>`;
+      });
+      html += `</ul>`;
+      DOM.summaryContent.innerHTML = html;
+    } catch (err) {
+      DOM.summaryContent.innerHTML = `❌ Gagal memuat laporan: ${err.message}`;
+    }
+  }
+
+  DOM.parentBtn.addEventListener('click', showLearningSummary);
+  DOM.closeParentBtn.addEventListener('click', () => {
+    DOM.parentPanel.classList.add('hidden');
+  });
+  DOM.sendBtn.addEventListener('click', onSendMessage);
+  DOM.msgInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') onSendMessage(); });
+
+  // Optional: ketika mode berubah, cek exam unlock
+  DOM.mode.addEventListener('change', async () => {
+    if (DOM.mode.value === 'exam') {
+      const unlocked = await checkExamUnlock();
+      if (!unlocked) {
+        DOM.mode.value = 'practice';
+      }
+    }
+  });
+  // peringatan jika subject atau grade berubah (exam unlock tetap dicek saat kirim)
+</script>
+</body>
+</html>
