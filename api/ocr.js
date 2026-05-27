@@ -1,4 +1,4 @@
-// api/ocr.js (final dengan Supabase Storage + OCR.space OCREngine=2)
+// api/ocr.js (final dengan download via Supabase SDK)
 import { supabase } from '../lib/supabase-client.js';
 
 export default async function handler(req, res) {
@@ -7,9 +7,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { fileUrl } = req.body;
-    if (!fileUrl) {
-      return res.status(400). json({ error: 'fileUrl wajib diisi' });
+    const { filePath } = req.body;
+    if (!filePath) {
+      return res.status(400).json({ error: 'filePath wajib diisi' });
     }
 
     const apiKey = process.env.OCR_SPACE_API_KEY;
@@ -18,19 +18,24 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Server tidak terkonfigurasi' });
     }
 
-    // Download file dari Supabase Storage
-    const fileResponse = await fetch(fileUrl);
-    if (!fileResponse.ok) {
-      throw new Error(`Gagal download file dari Storage: ${fileResponse.status}`);
+    // Download file dari Supabase Storage menggunakan SDK (aman untuk bucket private)
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from('ocr-uploads')
+      .download(filePath);
+
+    if (downloadError) {
+      console.error('Download error:', downloadError);
+      throw new Error('Gagal mengunduh file dari storage');
     }
-    const fileBuffer = await fileResponse.arrayBuffer();
-    const contentType = fileResponse.headers.get('content-type') || 'application/octet-stream';
-    
+
+    const fileBuffer = Buffer.from(await fileData.arrayBuffer());
+    const contentType = fileData.type || 'application/octet-stream';
+
     // Tentukan filetype untuk OCR.space
-    const isPdf = contentType.includes('pdf') || fileUrl.toLowerCase().includes('.pdf');
+    const isPdf = contentType.includes('pdf') || filePath.toLowerCase().includes('.pdf');
     const fileTypeParam = isPdf ? 'PDF' : 'Auto';
 
-    // Kirim ke OCR.space dengan OCREngine=2 (lebih akurat)
+    // Kirim ke OCR.space dengan OCREngine=2
     const formData = new FormData();
     const blob = new Blob([fileBuffer], { type: contentType });
     formData.append('file', blob, 'upload');
@@ -56,8 +61,7 @@ export default async function handler(req, res) {
       return res.status(422).json({ error: 'Tidak ada teks terdeteksi' });
     }
 
-    // (Opsional) hapus file dari Storage setelah selesai
-    const filePath = new URL(fileUrl).pathname.split('/').slice(3).join('/');
+    // (Opsional) hapus file dari storage setelah selesai untuk menghemat ruang
     await supabase.storage.from('ocr-uploads').remove([filePath]).catch(console.error);
 
     return res.status(200).json({ success: true, text: extractedText });
