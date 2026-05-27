@@ -1,29 +1,21 @@
 // api/ocr.js
-// Vercel Serverless Function untuk OCR menggunakan OCR.space API
-// Menerima upload file (gambar/PDF) dan mengembalikan teks hasil scan
-
 import Busboy from 'busboy';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({
-      success: false,
-      error: 'Method tidak diizinkan. Gunakan POST.'
-    });
+    return res.status(405).json({ success: false, error: 'Method tidak diizinkan.' });
   }
 
   const apiKey = process.env.OCR_SPACE_API_KEY;
   if (!apiKey) {
     console.error('OCR Error: OCR_SPACE_API_KEY tidak ditemukan');
-    return res.status(500).json({
-      success: false,
-      error: 'Server tidak terkonfigurasi dengan benar.'
-    });
+    return res.status(500).json({ success: false, error: 'Server tidak terkonfigurasi.' });
   }
 
   let fileBuffer = null;
-  let fileInfo = null;
+  let fileMimetype = null;
   let fileFound = false;
+  let fileFilename = null;
 
   const busboy = Busboy({ headers: req.headers });
   const parsePromise = new Promise((resolve, reject) => {
@@ -33,7 +25,8 @@ export default async function handler(req, res) {
         return;
       }
       fileFound = true;
-      fileInfo = { filename, mimetype };
+      fileMimetype = mimetype;
+      fileFilename = filename;
       const chunks = [];
       file.on('data', (chunk) => chunks.push(chunk));
       file.on('end', () => {
@@ -42,13 +35,9 @@ export default async function handler(req, res) {
       });
       file.on('error', (err) => reject(err));
     });
-
     busboy.on('finish', () => {
-      if (!fileFound) {
-        reject(new Error('Tidak ada file yang diunggah.'));
-      } else {
-        resolve();
-      }
+      if (!fileFound) reject(new Error('Tidak ada file.'));
+      else resolve();
     });
     busboy.on('error', (err) => reject(err));
   });
@@ -57,71 +46,52 @@ export default async function handler(req, res) {
 
   try {
     await parsePromise;
-
     if (!fileBuffer || fileBuffer.length === 0) {
       return res.status(400).json({ success: false, error: 'File kosong.' });
     }
-
-    const maxSize = 5 * 1024 * 1024;
-    if (fileBuffer.length > maxSize) {
-      return res.status(413).json({ success: false, error: 'Ukuran file maksimal 5 MB.' });
+    if (fileBuffer.length > 5 * 1024 * 1024) {
+      return res.status(413).json({ success: false, error: 'Maksimal 5 MB.' });
     }
 
-    // --- PERBAIKAN UTAMA DI SINI ---
-    // 1. Tentukan 'filetype' dengan lebih baik
+    // Tentukan filetype berdasarkan mimetype (paling aman)
     let filetype = 'Auto';
-    if (fileInfo && fileInfo.mimetype && fileInfo.mimetype.includes('pdf')) {
+    if (fileMimetype && fileMimetype.includes('pdf')) {
       filetype = 'PDF';
-    } else if (fileInfo && fileInfo.filename && fileInfo.filename.toLowerCase().includes('.pdf')) {
+    } else if (fileFilename && typeof fileFilename === 'string' && fileFilename.toLowerCase().endsWith('.pdf')) {
+      // Fallback jika mimetype tidak ada
       filetype = 'PDF';
     }
 
-    // 2. Kirimkan parameter 'language' dengan nilai 'auto'
+    // Siapkan FormData
     const formData = new FormData();
-    const blob = new Blob([fileBuffer], { type: fileInfo?.mimetype || 'application/octet-stream' });
-    formData.append('file', blob, fileInfo?.filename || 'upload.jpg');
+    const blob = new Blob([fileBuffer], { type: fileMimetype || 'application/octet-stream' });
+    // Nama file aman: jika filename string gunakan, jika tidak beri default
+    const safeFilename = (fileFilename && typeof fileFilename === 'string') ? fileFilename : 'upload.jpg';
+    formData.append('file', blob, safeFilename);
     formData.append('apikey', apiKey);
-    formData.append('language', 'auto'); // <-- PERUBAHAN: 'auto' bukan 'ind'
+    formData.append('language', 'auto');
     formData.append('isOverlayRequired', 'false');
     formData.append('filetype', filetype);
-    // --- AKHIR PERBAIKAN ---
 
     const response = await fetch('https://api.ocr.space/parse/image', {
       method: 'POST',
       body: formData,
     });
-
     const data = await response.json();
 
     if (data.IsErroredOnProcessing || !data.ParsedResults || data.ParsedResults.length === 0) {
-      console.error('OCR.space error:', data.ErrorMessage || 'Unknown error');
-      return res.status(422).json({
-        success: false,
-        error: 'Gagal membaca teks. Pastikan gambar jelas.'
-      });
+      console.error('OCR.space error:', data.ErrorMessage);
+      return res.status(422).json({ success: false, error: 'Gagal membaca teks. Pastikan gambar jelas.' });
     }
-
     const extractedText = data.ParsedResults[0].ParsedText || '';
     if (!extractedText.trim()) {
-      return res.status(422).json({
-        success: false,
-        error: 'Tidak ada teks terdeteksi.'
-      });
+      return res.status(422).json({ success: false, error: 'Tidak ada teks terdeteksi.' });
     }
-
     return res.status(200).json({ success: true, text: extractedText });
-
   } catch (err) {
     console.error('OCR handler error:', err.message);
-    return res.status(500).json({
-      success: false,
-      error: 'Maaf, gagal memproses file. Coba lagi.'
-    });
+    return res.status(500).json({ success: false, error: 'Maaf, gagal memproses file. Coba lagi.' });
   }
 }
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export const config = { api: { bodyParser: false } };
