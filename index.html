@@ -70,6 +70,51 @@
   function addMessage(text, isUser=false) { let div=document.createElement('div'); div.className=`message ${isUser?'user':'ai'}`; div.innerText=text; DOM.chatMessages.appendChild(div); DOM.chatMessages.scrollTop=DOM.chatMessages.scrollHeight; }
   function setLoading(loading) { DOM.loading.style.display = loading ? 'block' : 'none'; }
   
+  // Fungsi kompresi gambar (max 1MB)
+  async function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      if (!file.type.startsWith('image/')) {
+        resolve(file);
+        return;
+      }
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1000; // resolusi maksimal
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = (height * maxDim) / width;
+              width = maxDim;
+            } else {
+              width = (width * maxDim) / height;
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(
+            (blob) => {
+              const compressedFile = new File([blob], file.name, { type: file.type });
+              resolve(compressedFile);
+            },
+            file.type,
+            0.7 // kualitas 70%
+          );
+        };
+        img.onerror = reject;
+      };
+      reader.onerror = reject;
+    });
+  }
+  
   async function uploadToSupabase(file) {
     const fileName = encodeURIComponent(file.name);
     const fileType = file.type;
@@ -87,7 +132,13 @@
   async function performOCR(file) {
     setLoading(true);
     try {
-      const filePath = await uploadToSupabase(file);
+      // Kompres gambar sebelum upload
+      let fileToUpload = file;
+      if (file.type.startsWith('image/')) {
+        fileToUpload = await compressImage(file);
+        console.log(`Size after compression: ${(fileToUpload.size / 1024).toFixed(0)} KB`);
+      }
+      const filePath = await uploadToSupabase(fileToUpload);
       const ocrRes = await fetch('/api/ocr', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ filePath }) });
       const data = await ocrRes.json();
       if (!data.success) throw new Error(data.error);
