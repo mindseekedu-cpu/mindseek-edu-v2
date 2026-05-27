@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MindSeek.edu – Ai Mi</title>
   <style>
-    /* CSS sama seperti sebelumnya, dipertahankan */
     * { margin:0; padding:0; box-sizing:border-box; font-family:system-ui; }
     body { background: linear-gradient(135deg, #f5f7fa 0%, #e9eef5 100%); min-height:100vh; padding:20px; }
     .container { max-width:1400px; margin:0 auto; }
@@ -57,7 +56,6 @@
   <div id="parentPanel" class="parent-panel"><h3>📊 Laporan</h3><div id="summaryContent"></div><button id="closeParentBtn" class="secondary">Tutup</button></div>
 </div>
 <script>
-  // State
   let sessionId = localStorage.getItem('mindseek_sessionId') || ('session_'+Date.now()+'_'+Math.random().toString(36).substr(2,8));
   localStorage.setItem('mindseek_sessionId', sessionId);
   const DOM = {
@@ -80,18 +78,17 @@
       body: JSON.stringify({ fileName, fileType })
     });
     if (!res.ok) throw new Error('Gagal dapat signed URL');
-    const { signedUrl, publicUrl } = await res.json();
-    // Upload file ke signed URL
+    const { signedUrl, filePath } = await res.json();
     const uploadRes = await fetch(signedUrl, { method: 'PUT', body: file, headers: { 'Content-Type': fileType } });
     if (!uploadRes.ok) throw new Error('Gagal upload ke storage');
-    return publicUrl;
+    return filePath;
   }
   
   async function performOCR(file) {
     setLoading(true);
     try {
-      const publicUrl = await uploadToSupabase(file);
-      const ocrRes = await fetch('/api/ocr', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ fileUrl: publicUrl }) });
+      const filePath = await uploadToSupabase(file);
+      const ocrRes = await fetch('/api/ocr', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ filePath }) });
       const data = await ocrRes.json();
       if (!data.success) throw new Error(data.error);
       return data.text;
@@ -115,7 +112,7 @@
     finally { setLoading(false); }
   }
   
-  async function checkExamUnlock() { // simple
+  async function checkExamUnlock() {
     if (DOM.mode.value !== 'exam') return true;
     const userId = DOM.userId.value.trim() || 'demo001';
     const grade = DOM.grade.value; const subject = DOM.subject.value;
@@ -134,7 +131,7 @@
     const ocrText = await performOCR(file);
     if (ocrText) {
       addMessage(`📄 Hasil scan: "${ocrText.substring(0,150)}${ocrText.length>150?'…':''}"`, false);
-      DOM.msgInput.value = ocrText; // langsung tempel ke input
+      DOM.msgInput.value = ocrText;
     }
     DOM.fileInput.value = '';
   });
