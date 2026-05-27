@@ -1,20 +1,4 @@
 {
-  "functions": {
-    "api/*.js": {
-      "runtime": "nodejs20.x"
-    }
-  },
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
-  "buildCommand": null,
-  "outputDirectory": ".",
-  "devCommand": null
+  "buildCommand": "echo 'Static site - no build needed'",
+  "outputDirectory": "."
 }
