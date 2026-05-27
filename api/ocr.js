@@ -83,12 +83,14 @@ export default async function handler(req, res) {
     // Kirim ke OCR.space API
     const formData = new FormData();
     // OCR.space menerima file sebagai blob atau base64. Kita kirim sebagai Blob.
-    const blob = new Blob([fileBuffer], { type: fileInfo.mimetype });
-    formData.append('file', blob, fileInfo.filename);
+    const blob = new Blob([fileBuffer], { type: fileInfo?.mimetype || 'application/octet-stream' });
+    formData.append('file', blob, fileInfo?.filename || 'upload');
     formData.append('apikey', apiKey);
-    formData.append('language', 'ind'); // Bahasa Indonesia (bisa juga 'ind,eng' untuk dual)
+    formData.append('language', 'ind'); // Bahasa Indonesia
     formData.append('isOverlayRequired', 'false');
-    formData.append('filetype', fileInfo.mimetype.includes('pdf') ? 'PDF' : 'Auto');
+    // Perbaikan: cek mimetype dengan aman
+    const isPdf = fileInfo && fileInfo.mimetype && fileInfo.mimetype.includes('pdf');
+    formData.append('filetype', isPdf ? 'PDF' : 'Auto');
 
     const response = await fetch('https://api.ocr.space/parse/image', {
       method: 'POST',
