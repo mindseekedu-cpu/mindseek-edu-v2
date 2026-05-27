@@ -1,95 +1,68 @@
-// api/ocr.js
-import Busboy from 'busboy';
+// api/ocr.js (final dengan Supabase Storage + OCR.space OCREngine=2)
+import { supabase } from '../lib/supabase-client.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, error: 'Method tidak diizinkan.' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
-
-  const apiKey = process.env.OCR_SPACE_API_KEY;
-  if (!apiKey) {
-    console.error('OCR Error: OCR_SPACE_API_KEY tidak ditemukan');
-    return res.status(500).json({ success: false, error: 'Server tidak terkonfigurasi.' });
-  }
-
-  let fileBuffer = null;
-  let fileMimetype = null;
-  let fileFound = false;
-  let fileFilename = null;
-
-  const busboy = Busboy({ headers: req.headers });
-  const parsePromise = new Promise((resolve, reject) => {
-    busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-      if (fieldname !== 'file') {
-        file.resume();
-        return;
-      }
-      fileFound = true;
-      fileMimetype = mimetype;
-      fileFilename = filename;
-      const chunks = [];
-      file.on('data', (chunk) => chunks.push(chunk));
-      file.on('end', () => {
-        fileBuffer = Buffer.concat(chunks);
-        resolve();
-      });
-      file.on('error', (err) => reject(err));
-    });
-    busboy.on('finish', () => {
-      if (!fileFound) reject(new Error('Tidak ada file.'));
-      else resolve();
-    });
-    busboy.on('error', (err) => reject(err));
-  });
-
-  req.pipe(busboy);
 
   try {
-    await parsePromise;
-    if (!fileBuffer || fileBuffer.length === 0) {
-      return res.status(400).json({ success: false, error: 'File kosong.' });
-    }
-    if (fileBuffer.length > 5 * 1024 * 1024) {
-      return res.status(413).json({ success: false, error: 'Maksimal 5 MB.' });
+    const { fileUrl } = req.body;
+    if (!fileUrl) {
+      return res.status(400). json({ error: 'fileUrl wajib diisi' });
     }
 
-    // Tentukan filetype berdasarkan mimetype
-    let filetype = 'Auto';
-    if (fileMimetype && fileMimetype.includes('pdf')) {
-      filetype = 'PDF';
+    const apiKey = process.env.OCR_SPACE_API_KEY;
+    if (!apiKey) {
+      console.error('OCR Error: OCR_SPACE_API_KEY missing');
+      return res.status(500).json({ error: 'Server tidak terkonfigurasi' });
     }
 
-    // Siapkan FormData
+    // Download file dari Supabase Storage
+    const fileResponse = await fetch(fileUrl);
+    if (!fileResponse.ok) {
+      throw new Error(`Gagal download file dari Storage: ${fileResponse.status}`);
+    }
+    const fileBuffer = await fileResponse.arrayBuffer();
+    const contentType = fileResponse.headers.get('content-type') || 'application/octet-stream';
+    
+    // Tentukan filetype untuk OCR.space
+    const isPdf = contentType.includes('pdf') || fileUrl.toLowerCase().includes('.pdf');
+    const fileTypeParam = isPdf ? 'PDF' : 'Auto';
+
+    // Kirim ke OCR.space dengan OCREngine=2 (lebih akurat)
     const formData = new FormData();
-    const blob = new Blob([fileBuffer], { type: fileMimetype || 'application/octet-stream' });
-    const safeFilename = (fileFilename && typeof fileFilename === 'string') ? fileFilename : 'upload.jpg';
-    formData.append('file', blob, safeFilename);
+    const blob = new Blob([fileBuffer], { type: contentType });
+    formData.append('file', blob, 'upload');
     formData.append('apikey', apiKey);
+    formData.append('language', 'eng');
+    formData.append('OCREngine', '2');
     formData.append('isOverlayRequired', 'false');
-    formData.append('filetype', filetype);
-    formData.append('OCREngine', '2'); // Beralih ke Engine 2
-    formData.append('isCreateSearchablePdf', 'false');
-    formData.append('isTable', 'false');
+    formData.append('filetype', fileTypeParam);
 
-    const response = await fetch('https://api.ocr.space/parse/image', {
+    const ocrResponse = await fetch('https://api.ocr.space/parse/image', {
       method: 'POST',
       body: formData,
     });
-    const data = await response.json();
 
-    if (data.IsErroredOnProcessing || !data.ParsedResults || data.ParsedResults.length === 0) {
-      console.error('OCR.space error:', data.ErrorMessage);
-      return res.status(422).json({ success: false, error: 'Gagal membaca teks. Pastikan gambar jelas.' });
+    const ocrData = await ocrResponse.json();
+    if (ocrData.IsErroredOnProcessing || !ocrData.ParsedResults?.length) {
+      console.error('OCR.space error:', ocrData.ErrorMessage);
+      return res.status(422).json({ error: 'Gagal membaca teks dari file' });
     }
-    const extractedText = data.ParsedResults[0].ParsedText || '';
+
+    const extractedText = ocrData.ParsedResults[0].ParsedText || '';
     if (!extractedText.trim()) {
-      return res.status(422).json({ success: false, error: 'Tidak ada teks terdeteksi.' });
+      return res.status(422).json({ error: 'Tidak ada teks terdeteksi' });
     }
+
+    // (Opsional) hapus file dari Storage setelah selesai
+    const filePath = new URL(fileUrl).pathname.split('/').slice(3).join('/');
+    await supabase.storage.from('ocr-uploads').remove([filePath]).catch(console.error);
+
     return res.status(200).json({ success: true, text: extractedText });
-  } catch (err) {
-    console.error('OCR handler error:', err.message);
-    return res.status(500).json({ success: false, error: 'Maaf, gagal memproses file. Coba lagi.' });
+  } catch (error) {
+    console.error('OCR handler error:', error.message);
+    return res.status(500).json({ error: 'Maaf, gagal memproses file' });
   }
 }
-
-export const config = { api: { bodyParser: false } };
