@@ -1,4 +1,4 @@
-// api/ocr.js (final dengan ekstensi file yang benar)
+// api/ocr.js (final dengan logging dan fallback)
 import { supabase } from '../lib/supabase-client.js';
 
 export default async function handler(req, res) {
@@ -11,6 +11,8 @@ export default async function handler(req, res) {
     if (!filePath) {
       return res.status(400).json({ error: 'filePath wajib diisi' });
     }
+
+    console.log('Processing filePath:', filePath);
 
     const apiKey = process.env.OCR_SPACE_API_KEY;
     if (!apiKey) {
@@ -30,8 +32,14 @@ export default async function handler(req, res) {
 
     const fileBuffer = Buffer.from(await fileData.arrayBuffer());
     const contentType = fileData.type || 'application/octet-stream';
+    console.log('File size:', fileBuffer.length, 'Content-Type:', contentType);
 
-    // Tentukan ekstensi file berdasarkan content-type atau nama file
+    // Cek ukuran (OCR.space gratis maksimal 5MB, tapi lebih aman 4MB)
+    if (fileBuffer.length > 4 * 1024 * 1024) {
+      return res.status(413).json({ error: 'Ukuran file terlalu besar (maksimal 4MB untuk OCR.space gratis)' });
+    }
+
+    // Tentukan ekstensi file dan filetype
     let fileExtension = '';
     let fileTypeParam = 'Auto';
 
@@ -40,12 +48,14 @@ export default async function handler(req, res) {
       fileTypeParam = 'PDF';
     } else if (contentType.includes('jpeg') || contentType.includes('jpg')) {
       fileExtension = '.jpg';
-      fileTypeParam = 'Auto';
     } else if (contentType.includes('png')) {
       fileExtension = '.png';
-      fileTypeParam = 'Auto';
+    } else if (contentType.includes('heic') || contentType.includes('heif')) {
+      // HP iPhone sering kirim HEIC, ganti ke jpg
+      fileExtension = '.jpg';
+      console.log('HEIC detected, treated as jpg');
     } else {
-      // Fallback: cek dari ekstensi filePath
+      // Coba ekstrak dari filePath
       const lastDot = filePath.lastIndexOf('.');
       if (lastDot !== -1) {
         fileExtension = filePath.substring(lastDot);
@@ -55,10 +65,10 @@ export default async function handler(req, res) {
       }
     }
 
-    // Nama file dengan ekstensi yang benar
     const fileName = `upload${fileExtension}`;
+    console.log('Sending to OCR.space with filename:', fileName, 'filetype:', fileTypeParam);
 
-    // Kirim ke OCR.space dengan OCREngine=2
+    // Kirim ke OCR.space
     const formData = new FormData();
     const blob = new Blob([fileBuffer], { type: contentType });
     formData.append('file', blob, fileName);
@@ -74,9 +84,18 @@ export default async function handler(req, res) {
     });
 
     const ocrData = await ocrResponse.json();
-    if (ocrData.IsErroredOnProcessing || !ocrData.ParsedResults?.length) {
-      console.error('OCR.space error:', ocrData.ErrorMessage);
-      return res.status(422).json({ error: 'Gagal membaca teks dari file' });
+    console.log('OCR.space response status:', ocrResponse.status);
+    console.log('OCR.space response body:', JSON.stringify(ocrData).substring(0, 500));
+
+    if (!ocrResponse.ok || ocrData.IsErroredOnProcessing) {
+      const errorMsg = ocrData.ErrorMessage || ocrData.Errors?.join(', ') || 'Unknown OCR error';
+      console.error('OCR.space error:', errorMsg);
+      return res.status(422).json({ error: `Gagal membaca teks: ${errorMsg}` });
+    }
+
+    if (!ocrData.ParsedResults || !ocrData.ParsedResults.length) {
+      console.error('No parsed results', ocrData);
+      return res.status(422).json({ error: 'OCR tidak menghasilkan teks' });
     }
 
     const extractedText = ocrData.ParsedResults[0].ParsedText || '';
@@ -89,7 +108,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ success: true, text: extractedText });
   } catch (error) {
-    console.error('OCR handler error:', error.message);
-    return res.status(500).json({ error: 'Maaf, gagal memproses file' });
+    console.error('OCR handler error:', error.message, error.stack);
+    return res.status(500).json({ error: 'Maaf, gagal memproses file. Coba lagi.' });
   }
 }
