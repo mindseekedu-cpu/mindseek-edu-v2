@@ -53,25 +53,23 @@ export default async function handler(req, res) {
       return res.status(413).json({ success: false, error: 'Maksimal 5 MB.' });
     }
 
-    // Tentukan filetype berdasarkan mimetype (paling aman)
+    // Tentukan filetype berdasarkan mimetype
     let filetype = 'Auto';
     if (fileMimetype && fileMimetype.includes('pdf')) {
-      filetype = 'PDF';
-    } else if (fileFilename && typeof fileFilename === 'string' && fileFilename.toLowerCase().endsWith('.pdf')) {
-      // Fallback jika mimetype tidak ada
       filetype = 'PDF';
     }
 
     // Siapkan FormData
     const formData = new FormData();
     const blob = new Blob([fileBuffer], { type: fileMimetype || 'application/octet-stream' });
-    // Nama file aman: jika filename string gunakan, jika tidak beri default
     const safeFilename = (fileFilename && typeof fileFilename === 'string') ? fileFilename : 'upload.jpg';
     formData.append('file', blob, safeFilename);
     formData.append('apikey', apiKey);
-    formData.append('language', 'auto');
     formData.append('isOverlayRequired', 'false');
     formData.append('filetype', filetype);
+    formData.append('OCREngine', '2'); // Beralih ke Engine 2
+    formData.append('isCreateSearchablePdf', 'false');
+    formData.append('isTable', 'false');
 
     const response = await fetch('https://api.ocr.space/parse/image', {
       method: 'POST',
