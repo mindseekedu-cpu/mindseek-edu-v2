@@ -1,10 +1,13 @@
 // api/chat.js
+// Vercel Serverless Function untuk komunikasi dengan AI DeepSeek
+// Menerima student_id (wajib) untuk identitas siswa
+
 import { getSystemPrompt } from '../lib/prompts.js';
 import { supabase } from '../lib/supabase-client.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method tidak diizinkan.' });
+    return res.status(405).json({ error: 'Method tidak diizinkan. Gunakan POST.' });
   }
 
   try {
@@ -17,19 +20,24 @@ export default async function handler(req, res) {
       message,
       ocrText,
       sessionId,
-      userId
+      studentId,       // <-- Ganti dari userId/sessionId ke student_id
+      questionHistory = []
     } = req.body;
 
-    if (!mode || !grade || !topic) {
-      return res.status(400).json({ error: 'Mode, grade, dan topic wajib diisi.' });
+    // Validasi input wajib
+    if (!mode || !grade || !topic || !studentId) {
+      return res.status(400).json({ error: 'Mode, grade, topic, dan studentId wajib diisi.' });
     }
 
     const allowedModes = ['pr', 'practice', 'exam'];
     if (!allowedModes.includes(mode)) {
-      return res.status(400).json({ error: 'Mode tidak valid.' });
+      return res.status(400).json({ error: 'Mode tidak valid. Gunakan: pr, practice, atau exam.' });
     }
 
-    // Gabungkan OCR jika ada
+    if (!message && !ocrText) {
+      return res.status(400).json({ error: 'Pesan atau hasil OCR tidak boleh kosong.' });
+    }
+
     let userMessage = message || '';
     if (ocrText && ocrText.trim()) {
       userMessage = userMessage 
@@ -37,24 +45,19 @@ export default async function handler(req, res) {
         : `[Hasil scan gambar]: ${ocrText}`;
     }
 
-    // Ambil system prompt dasar
-    let systemPrompt = getSystemPrompt(mode, language);
-    
-    // Untuk mode practice dan exam, tambahkan instruksi tentang topik
-    let enhancedSystemPrompt = systemPrompt;
-    if (mode === 'practice' || mode === 'exam') {
-      enhancedSystemPrompt = `${systemPrompt}\n\nTopik yang dipilih siswa adalah: "${topic}" (kelas ${grade}, mata pelajaran ${subject}).\nGenerate soal sesuai topik tersebut. Jangan tanyakan topik lagi. Langsung mulai berikan soal.`;
-    }
-
+    const systemPrompt = getSystemPrompt(mode, language);
     const messages = [
-      { role: 'system', content: enhancedSystemPrompt },
-      { role: 'user', content: userMessage || (mode === 'practice' ? `Ayo latihan topik ${topic}` : (mode === 'exam' ? 'Ayo ujian' : '')) }
+      { role: 'system', content: systemPrompt }
     ];
+    if (questionHistory && questionHistory.length > 0) {
+      messages.push(...questionHistory);
+    }
+    messages.push({ role: 'user', content: userMessage });
 
     const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
     if (!deepseekApiKey) {
       console.error('Chat Error: DEEPSEEK_API_KEY tidak ditemukan');
-      return res.status(500).json({ error: 'Server tidak terkonfigurasi.' });
+      return res.status(500).json({ error: 'Server tidak terkonfigurasi dengan benar.' });
     }
 
     const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -80,11 +83,10 @@ export default async function handler(req, res) {
     const deepseekData = await deepseekResponse.json();
     const aiReply = deepseekData.choices[0]?.message?.content || 'Maaf, Ai Mi tidak bisa menjawab saat ini.';
 
-    // Simpan percakapan ke Supabase secara asinkron
-    const userIdFinal = userId || sessionId || 'anonymous';
+    // Simpan percakapan ke tabel chats dengan student_id (tanpa blok response)
     const chatRecord = {
-      user_id: userIdFinal,
-      user_message: userMessage || message || '',
+      student_id: studentId,        // <-- menggunakan student_id
+      user_message: userMessage,
       ai_message: aiReply,
       subject: subject || null,
       grade: grade,
@@ -92,16 +94,27 @@ export default async function handler(req, res) {
       session_type: mode,
       timestamp: new Date().toISOString()
     };
+
     Promise.resolve().then(async () => {
       try {
         const { error } = await supabase.from('chats').insert(chatRecord);
-        if (error) console.error('Gagal simpan chat:', error.message);
-      } catch (err) { console.error('Async save error:', err.message); }
+        if (error) console.error('Gagal simpan chat ke Supabase:', error.message);
+      } catch (err) {
+        console.error('Error async save chat:', err.message);
+      }
     });
 
-    return res.status(200).json({ success: true, reply: aiReply, sessionId: sessionId });
+    return res.status(200).json({
+      success: true,
+      reply: aiReply,
+      sessionId: sessionId || null
+    });
+
   } catch (error) {
     console.error('Chat handler error:', error.message);
-    return res.status(500).json({ success: false, error: 'Maaf, Ai Mi sedang sibuk. Coba lagi nanti.' });
+    return res.status(500).json({
+      success: false,
+      error: 'Maaf, Ai Mi sedang sibuk. Coba lagi beberapa saat.'
+    });
   }
 }
