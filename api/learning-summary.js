@@ -1,47 +1,46 @@
 // api/learning-summary.js
 // Vercel Serverless Function untuk laporan perkembangan siswa (orang tua)
 // Menampilkan progress per topik, statistik keseluruhan, soal butuh dampingan, riwayat sesi
+// Menggunakan student_id (bukan user_id)
 
 import { supabase } from '../lib/supabase-client.js';
 
 export default async function handler(req, res) {
-  // Hanya menerima GET
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method tidak diizinkan. Gunakan GET.' });
   }
 
   try {
-    const { userId } = req.query;
+    const { studentId } = req.query;
 
-    if (!userId) {
-      return res.status(400).json({ error: 'Parameter userId wajib diisi.' });
+    if (!studentId) {
+      return res.status(400).json({ error: 'Parameter studentId wajib diisi.' });
     }
 
-    // Parallel queries untuk efisiensi
+    // Parallel queries dengan student_id
     const [topicsResult, guidanceResult, sessionsResult] = await Promise.all([
       supabase
         .from('topics_progress')
         .select('*')
-        .eq('user_id', userId)
+        .eq('student_id', studentId)
         .order('grade', { ascending: true })
         .order('topic', { ascending: true }),
       
       supabase
         .from('guidance_questions')
         .select('*')
-        .eq('user_id', userId)
+        .eq('student_id', studentId)
         .eq('resolved', false)
         .order('created_at', { ascending: false }),
       
       supabase
         .from('sessions')
         .select('*')
-        .eq('user_id', userId)
+        .eq('student_id', studentId)
         .order('timestamp', { ascending: false })
         .limit(10)
     ]);
 
-    // Cek error masing-masing
     if (topicsResult.error) {
       console.error('Topics progress error:', topicsResult.error.message);
       throw new Error('Gagal mengambil data progress.');
@@ -69,7 +68,7 @@ export default async function handler(req, res) {
       const total = topic.total_questions || 0;
       const independent = topic.independent_count || 0;
       const percent = total > 0 ? independent / total : 0;
-      const mastered = (total >= 5 && percent >= 0.8); // sama dengan syarat exam unlock
+      const mastered = (total >= 5 && percent >= 0.8);
       
       totalQuestions += total;
       totalIndependent += independent;
@@ -88,9 +87,8 @@ export default async function handler(req, res) {
     const averageIndependence = totalQuestions > 0 ? totalIndependent / totalQuestions : 0;
     const totalTopicsPracticed = topicsProgress.length;
 
-    // Susun respons
     const response = {
-      userId: userId,
+      studentId: studentId,
       summary: {
         totalQuestions: totalQuestions,
         averageIndependence: Math.round(averageIndependence * 100) / 100,
