@@ -1,6 +1,7 @@
 // api/guidance-questions.js
 // Vercel Serverless Function untuk CRUD soal yang perlu didampingi orang tua
 // Tabel: guidance_questions
+// Menggunakan student_id (bukan user_id)
 
 import { supabase } from '../lib/supabase-client.js';
 
@@ -23,7 +24,7 @@ export default async function handler(req, res) {
 async function handlePost(req, res) {
   try {
     const {
-      userId,
+      studentId,
       questionText,
       topic,
       difficulty,
@@ -32,10 +33,10 @@ async function handlePost(req, res) {
       mode
     } = req.body;
 
-    // Validasi wajib
-    if (!userId || !questionText || !topic || !difficulty || !mode) {
+    // Validasi wajib (studentId menggantikan userId)
+    if (!studentId || !questionText || !topic || !difficulty || !mode) {
       return res.status(400).json({
-        error: 'userId, questionText, topic, difficulty, dan mode wajib diisi.'
+        error: 'studentId, questionText, topic, difficulty, dan mode wajib diisi.'
       });
     }
 
@@ -52,7 +53,7 @@ async function handlePost(req, res) {
     }
 
     const newQuestion = {
-      user_id: userId,
+      student_id: studentId,
       question_text: questionText,
       topic: topic,
       difficulty: difficulty,
@@ -91,19 +92,19 @@ async function handlePost(req, res) {
   }
 }
 
-// GET: mengambil daftar soal untuk orang tua (filter userId, status, resolved)
+// GET: mengambil daftar soal untuk orang tua (filter studentId, status, resolved)
 async function handleGet(req, res) {
   try {
-    const { userId, status, resolved } = req.query;
+    const { studentId, status, resolved } = req.query;
 
-    if (!userId) {
-      return res.status(400).json({ error: 'Parameter userId wajib diisi.' });
+    if (!studentId) {
+      return res.status(400).json({ error: 'Parameter studentId wajib diisi.' });
     }
 
     let query = supabase
       .from('guidance_questions')
       .select('*')
-      .eq('user_id', userId)
+      .eq('student_id', studentId)
       .order('created_at', { ascending: false });
 
     if (status) {
@@ -131,7 +132,7 @@ async function handleGet(req, res) {
   }
 }
 
-// PUT: update status/resolved dari soal (misal: resolved = true, status = 'resolved')
+// PUT: update status/resolved dari soal
 async function handlePut(req, res) {
   try {
     const { id } = req.query;
@@ -141,7 +142,6 @@ async function handlePut(req, res) {
       return res.status(400).json({ error: 'Parameter id wajib diisi.' });
     }
 
-    // Bangun object update
     const updateData = {};
     if (status !== undefined) updateData.status = status;
     if (resolved !== undefined) updateData.resolved = resolved;
@@ -184,7 +184,7 @@ async function handlePut(req, res) {
   }
 }
 
-// DELETE: menghapus soal (untuk debugging/hapus data salah)
+// DELETE: menghapus soal (untuk debugging)
 async function handleDelete(req, res) {
   try {
     const { id } = req.query;
@@ -192,9 +192,6 @@ async function handleDelete(req, res) {
     if (!id) {
       return res.status(400).json({ error: 'Parameter id wajib diisi.' });
     }
-
-    // Opsional: bisa ditambahkan secret token untuk keamanan, tapi untuk MVP cukup.
-    // Misal: const { token } = req.query; if (token !== process.env.ADMIN_TOKEN) ...
 
     const { data, error } = await supabase
       .from('guidance_questions')
