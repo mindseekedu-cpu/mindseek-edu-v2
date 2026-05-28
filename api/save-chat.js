@@ -1,11 +1,11 @@
 // api/save-chat.js
 // Vercel Serverless Function untuk menyimpan ringkasan akhir sesi belajar
 // Menyimpan ke tabel sessions dan (opsional) mengakumulasi ke topics_progress
+// Menggunakan student_id (bukan user_id)
 
 import { supabase } from '../lib/supabase-client.js';
 
 export default async function handler(req, res) {
-  // Hanya menerima method POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method tidak diizinkan. Gunakan POST.' });
   }
@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   try {
     const {
       sessionId,
-      userId,
+      studentId,
       sessionType,
       grade,
       topic,
@@ -29,10 +29,10 @@ export default async function handler(req, res) {
       hardCount
     } = req.body;
 
-    // Validasi input wajib
-    if (!sessionId || !sessionType || !grade || !topic) {
+    // Validasi input wajib (studentId ditambahkan)
+    if (!sessionId || !studentId || !sessionType || !grade || !topic) {
       return res.status(400).json({ 
-        error: 'sessionId, sessionType, grade, dan topic wajib diisi.' 
+        error: 'sessionId, studentId, sessionType, grade, dan topic wajib diisi.' 
       });
     }
 
@@ -44,10 +44,10 @@ export default async function handler(req, res) {
       });
     }
 
-    // Siapkan data untuk tabel sessions
+    // Siapkan data untuk tabel sessions (pakai student_id)
     const sessionData = {
       session_id: sessionId,
-      user_id: userId || sessionId, // fallback ke sessionId jika userId tidak dikirim
+      student_id: studentId,
       session_type: sessionType,
       grade: grade,
       topic: topic,
@@ -76,51 +76,11 @@ export default async function handler(req, res) {
 
     // === Jika mode practice atau exam, update topics_progress ===
     if (sessionType === 'practice' || sessionType === 'exam') {
-      // Ambil data progress yang sudah ada (atau akan dibuat baru)
-      const progressUserId = userId || sessionId;
-      
-      // Hitung total soal yang dikerjakan (completedCount) - asumsikan semua soal yang dijawab adalah completedCount
-      // Untuk topics_progress, kita akumulasi:
-      // - total_questions: tambah completedCount
-      // - independent_count: tambah independentCount
-      // - easy_count: tambah easyCount
-      // - medium_count: tambah mediumCount
-      // - hard_count: tambah hardCount
-      // - last_practiced: now()
-      
-      // Gunakan upsert dengan konflik pada (user_id, grade, topic)
-      const { error: progressError } = await supabase
-        .from('topics_progress')
-        .upsert(
-          {
-            user_id: progressUserId,
-            grade: grade,
-            topic: topic,
-            subject: subject || null,
-            total_questions: completedCount || 0,
-            independent_count: independentCount || 0,
-            easy_count: easyCount || 0,
-            medium_count: mediumCount || 0,
-            hard_count: hardCount || 0,
-            last_practiced: new Date().toISOString()
-          },
-          {
-            onConflict: 'user_id, grade, topic',
-            ignoreDuplicates: false
-          }
-        );
-
-      // Karena upsert dengan konflik perlu update nilai lama + nilai baru, 
-      // kita lakukan pendekatan dua langkah: select dulu, lalu update dengan increment.
-      // Pendekatan di atas akan menimpa, bukan mengakumulasi. Sesuai spesifikasi awal, kita ingin akumulasi.
-      // Maka kita lakukan manual: ambil data lama, hitung nilai baru, lalu upsert.
-      // Perbaikan: gunakan raw SQL atau lakukan select lalu update. Saya akan gunakan select + update.
-      
-      // Ambil data lama
+      // Ambil data existing topics_progress berdasarkan student_id, grade, topic
       const { data: existing, error: fetchError } = await supabase
         .from('topics_progress')
         .select('total_questions, independent_count, easy_count, medium_count, hard_count')
-        .eq('user_id', progressUserId)
+        .eq('student_id', studentId)
         .eq('grade', grade)
         .eq('topic', topic)
         .maybeSingle();
@@ -136,11 +96,11 @@ export default async function handler(req, res) {
       const newMedium = (existing?.medium_count || 0) + (mediumCount || 0);
       const newHard = (existing?.hard_count || 0) + (hardCount || 0);
 
-      // Upsert dengan nilai akumulasi
+      // Upsert dengan student_id
       const { error: upsertError } = await supabase
         .from('topics_progress')
         .upsert({
-          user_id: progressUserId,
+          student_id: studentId,
           grade: grade,
           topic: topic,
           subject: subject || null,
@@ -151,7 +111,7 @@ export default async function handler(req, res) {
           hard_count: newHard,
           last_practiced: new Date().toISOString()
         }, {
-          onConflict: 'user_id, grade, topic'
+          onConflict: 'student_id, grade, topic'
         });
 
       if (upsertError) {
