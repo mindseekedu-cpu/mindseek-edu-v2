@@ -1,11 +1,11 @@
 // api/topic-progress.js
 // Vercel Serverless Function untuk membaca dan memperbarui progress siswa per topik
 // Endpoint: GET (baca progress) dan POST (increment progress)
+// Menggunakan student_id (bukan user_id)
 
 import { supabase } from '../lib/supabase-client.js';
 
 export default async function handler(req, res) {
-  // Hanya menerima GET dan POST
   if (req.method === 'GET') {
     return handleGet(req, res);
   } else if (req.method === 'POST') {
@@ -18,12 +18,12 @@ export default async function handler(req, res) {
 // Handler untuk GET request
 async function handleGet(req, res) {
   try {
-    const { userId, grade, topic } = req.query;
+    const { studentId, grade, topic } = req.query;
 
-    // Validasi userId dan grade wajib ada
-    if (!userId || !grade) {
+    // Validasi studentId dan grade wajib ada
+    if (!studentId || !grade) {
       return res.status(400).json({ 
-        error: 'Parameter userId dan grade wajib diisi.' 
+        error: 'Parameter studentId dan grade wajib diisi.' 
       });
     }
 
@@ -32,7 +32,7 @@ async function handleGet(req, res) {
       const { data, error } = await supabase
         .from('topics_progress')
         .select('*')
-        .eq('user_id', userId)
+        .eq('student_id', studentId)
         .eq('grade', grade)
         .eq('topic', topic)
         .maybeSingle();
@@ -42,10 +42,9 @@ async function handleGet(req, res) {
         throw new Error('Gagal mengambil data progress.');
       }
 
-      // Jika tidak ditemukan, kembalikan object kosong dengan default values
       if (!data) {
         return res.status(200).json({
-          user_id: userId,
+          student_id: studentId,
           grade: grade,
           topic: topic,
           total_questions: 0,
@@ -64,7 +63,7 @@ async function handleGet(req, res) {
       const { data, error } = await supabase
         .from('topics_progress')
         .select('*')
-        .eq('user_id', userId)
+        .eq('student_id', studentId)
         .eq('grade', grade)
         .order('topic', { ascending: true });
 
@@ -87,7 +86,7 @@ async function handleGet(req, res) {
 async function handlePost(req, res) {
   try {
     const {
-      userId,
+      studentId,
       grade,
       topic,
       subject,
@@ -99,9 +98,9 @@ async function handlePost(req, res) {
     } = req.body;
 
     // Validasi input wajib
-    if (!userId || !grade || !topic) {
+    if (!studentId || !grade || !topic) {
       return res.status(400).json({ 
-        error: 'userId, grade, dan topic wajib diisi.' 
+        error: 'studentId, grade, dan topic wajib diisi.' 
       });
     }
 
@@ -109,7 +108,7 @@ async function handlePost(req, res) {
     const { data: existing, error: fetchError } = await supabase
       .from('topics_progress')
       .select('*')
-      .eq('user_id', userId)
+      .eq('student_id', studentId)
       .eq('grade', grade)
       .eq('topic', topic)
       .maybeSingle();
@@ -129,7 +128,7 @@ async function handlePost(req, res) {
 
     // Data untuk upsert
     const progressData = {
-      user_id: userId,
+      student_id: studentId,
       grade: grade,
       topic: topic,
       subject: subject || existing?.subject || null,
@@ -145,7 +144,7 @@ async function handlePost(req, res) {
     const { data: upserted, error: upsertError } = await supabase
       .from('topics_progress')
       .upsert(progressData, {
-        onConflict: 'user_id, grade, topic',
+        onConflict: 'student_id, grade, topic',
         returning: 'representation'
       })
       .select()
