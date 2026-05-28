@@ -1,23 +1,23 @@
 // api/exam-unlock.js
 // Vercel Serverless Function untuk mengecek kelayakan ujian (Exam mode)
 // Syarat: semua topik dalam satu mata pelajaran di grade tertentu memiliki kemandirian ≥80%
+// Menggunakan student_id (bukan user_id)
 
 import { supabase } from '../lib/supabase-client.js';
 import { curriculum } from '../lib/curriculum.js';
 
 export default async function handler(req, res) {
-  // Hanya menerima GET
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method tidak diizinkan. Gunakan GET.' });
   }
 
   try {
-    const { userId, grade, subject = 'Matematika' } = req.query;
+    const { studentId, grade, subject = 'Matematika' } = req.query;
 
     // Validasi input
-    if (!userId || !grade) {
+    if (!studentId || !grade) {
       return res.status(400).json({ 
-        error: 'Parameter userId dan grade wajib diisi.' 
+        error: 'Parameter studentId dan grade wajib diisi.' 
       });
     }
 
@@ -40,11 +40,11 @@ export default async function handler(req, res) {
       });
     }
 
-    // Query topics_progress untuk user ini pada grade dan topik-topik yang relevan
+    // Query topics_progress untuk student ini pada grade dan topik-topik yang relevan
     const { data: progressData, error } = await supabase
       .from('topics_progress')
       .select('topic, total_questions, independent_count')
-      .eq('user_id', userId)
+      .eq('student_id', studentId)
       .eq('grade', grade);
 
     if (error) {
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
 
     // Hitung status tuntas untuk setiap topik
     const MIN_MASTERY_PERCENT = 0.8; // 80%
-    const MIN_QUESTIONS_REQUIRED = 5; // Minimal 5 soal untuk bisa dinilai tuntas (opsional, agar fair)
+    const MIN_QUESTIONS_REQUIRED = 5; // Minimal 5 soal untuk bisa dinilai tuntas
 
     let completedTopics = [];
     let incompleteTopics = [];
@@ -73,14 +73,11 @@ export default async function handler(req, res) {
       let total = progress?.total_questions || 0;
       let independent = progress?.independent_count || 0;
       
-      // Hitung persentase mandiri
       let mastery = 0;
       if (total > 0) {
         mastery = independent / total;
       }
       
-      // Syarat tuntas: total soal minimal 5 DAN mastery >= 80%
-      // Jika total soal kurang dari 5, dianggap belum tuntas (perlu lebih banyak latihan)
       const isCompleted = (total >= MIN_QUESTIONS_REQUIRED && mastery >= MIN_MASTERY_PERCENT);
       
       if (isCompleted) {
@@ -94,7 +91,6 @@ export default async function handler(req, res) {
     const completedCount = completedTopics.length;
     const unlocked = (completedCount === totalTopics);
 
-    // Pesan ramah
     let message = '';
     if (unlocked) {
       message = `Selamat! Kamu sudah menguasai semua topik ${subject} kelas ${grade} dengan baik. Kamu layak mengikuti ujian! 💪`;
