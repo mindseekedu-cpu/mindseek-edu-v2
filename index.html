@@ -14,19 +14,68 @@
 
     body {
       background: #f1f5f9;
-      height: 100vh;
-      overflow: hidden;
+      min-height: 100vh;
     }
 
-    /* Layout utama */
+    /* Auth pages */
+    .auth-container {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    .auth-card {
+      background: white;
+      border-radius: 32px;
+      padding: 32px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+    .auth-card h2 {
+      margin-bottom: 24px;
+      text-align: center;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .auth-card input {
+      width: 100%;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 60px;
+      font-size: 1rem;
+    }
+    .auth-card button {
+      width: 100%;
+      padding: 12px;
+      background: #1e3c72;
+      color: white;
+      border: none;
+      border-radius: 60px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .auth-card .link {
+      text-align: center;
+      margin-top: 16px;
+      color: #2a5298;
+      cursor: pointer;
+    }
+    .error-msg {
+      color: #dc2626;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    /* Dashboard & Chat (sama seperti sebelumnya, tapi dengan header dan logout) */
     .app {
       display: flex;
       height: 100vh;
       width: 100%;
       position: relative;
     }
-
-    /* Sidebar */
     .sidebar {
       width: 280px;
       background: white;
@@ -39,24 +88,12 @@
       padding: 24px 16px;
       gap: 24px;
     }
-
-    /* Logo */
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #eef2f6;
-    }
     .logo h2 {
       background: linear-gradient(135deg, #1e3c72, #2a5298);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      font-weight: 700;
     }
-
-    /* Control groups di sidebar */
     .control-group {
       display: flex;
       flex-direction: column;
@@ -66,7 +103,6 @@
       font-size: 0.7rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
       color: #5b6e8c;
     }
     select, input, button {
@@ -75,42 +111,25 @@
       border: 1px solid #e2e8f0;
       background: white;
       font-size: 0.9rem;
-      outline: none;
-      transition: all 0.2s;
-    }
-    select:focus, input:focus, button:focus {
-      border-color: #2a5298;
-      box-shadow: 0 0 0 2px rgba(42,82,152,0.2);
     }
     button {
       background: #1e3c72;
       color: white;
       border: none;
       cursor: pointer;
-      font-weight: 500;
     }
     button.secondary {
       background: #f1f5f9;
       color: #1e3c72;
       border: 1px solid #cbd5e1;
     }
-    button.outline {
-      background: transparent;
-      border: 1px solid #cbd5e1;
-      color: #2c3e66;
-    }
-
-    /* Main chat area */
     .main {
       flex: 1;
       display: flex;
       flex-direction: column;
       background: #f8fafc;
       overflow: hidden;
-      position: relative;
     }
-
-    /* Header chat */
     .chat-header {
       background: white;
       padding: 16px 24px;
@@ -118,17 +137,14 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      flex-wrap: wrap;
       justify-content: space-between;
     }
     .menu-toggle {
       display: none;
       background: none;
-      border: none;
       font-size: 1.6rem;
       cursor: pointer;
       color: #1e3c72;
-      padding: 4px 8px;
     }
     .header-title h3 {
       font-size: 1.4rem;
@@ -138,15 +154,6 @@
       background-clip: text;
       color: transparent;
     }
-    .badge {
-      background: #eef2ff;
-      padding: 6px 12px;
-      border-radius: 40px;
-      font-size: 0.75rem;
-      color: #1e3c72;
-    }
-
-    /* Chat messages */
     .chat-messages {
       flex: 1;
       overflow-y: auto;
@@ -154,15 +161,12 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
-      scroll-behavior: smooth;
     }
     .message {
       max-width: 80%;
       padding: 12px 18px;
       border-radius: 24px;
       line-height: 1.45;
-      animation: fadeIn 0.2s ease;
-      font-size: 0.95rem;
     }
     .message.user {
       align-self: flex-end;
@@ -176,9 +180,7 @@
       color: #1e2c44;
       border-bottom-left-radius: 6px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-      border: 1px solid #eef2f6;
     }
-    /* Input area */
     .input-area {
       background: white;
       border-top: 1px solid #eef2f6;
@@ -196,11 +198,6 @@
       border-radius: 60px;
       padding: 4px 8px 4px 20px;
       border: 1px solid #e2e8f0;
-      transition: 0.2s;
-    }
-    .input-wrapper:focus-within {
-      border-color: #2a5298;
-      box-shadow: 0 0 0 2px rgba(42,82,152,0.1);
     }
     .input-wrapper input {
       flex: 1;
@@ -208,20 +205,12 @@
       background: transparent;
       padding: 12px 0;
     }
-    .input-wrapper input:focus {
-      outline: none;
-      box-shadow: none;
-    }
     .file-label, .send-btn {
       background: #eef2ff;
       border: none;
       padding: 10px 16px;
       border-radius: 60px;
       cursor: pointer;
-      font-size: 1.2rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
     }
     .send-btn {
       background: #1e3c72;
@@ -232,53 +221,16 @@
       text-align: center;
       padding: 12px;
       color: #2a5298;
-      font-weight: 500;
     }
-    .loading::after {
-      content: " ...";
-      animation: blink 1s infinite;
+    .student-selector {
+      background: #f8fafc;
+      border-radius: 60px;
+      padding: 8px 16px;
+      margin-bottom: 8px;
     }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-    /* Parent panel modal */
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      visibility: hidden;
-      opacity: 0;
-      transition: 0.2s;
-    }
-    .modal.visible {
-      visibility: visible;
-      opacity: 1;
-    }
-    .modal-content {
-      background: white;
-      max-width: 90vw;
-      width: 600px;
-      max-height: 80vh;
-      border-radius: 32px;
-      padding: 24px;
-      overflow-y: auto;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    }
-    /* Responsive */
     @media (max-width: 768px) {
       .sidebar {
         position: fixed;
-        left: 0;
-        top: 0;
-        height: 100%;
         transform: translateX(-100%);
       }
       .sidebar.open {
@@ -290,395 +242,315 @@
       .message {
         max-width: 95%;
       }
-      .input-area {
-        padding: 12px;
-      }
-      .input-wrapper {
-        padding-left: 12px;
-      }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px);}
-      to { opacity: 1; transform: translateY(0);}
-    }
-    hr {
-      margin: 8px 0;
-      border-color: #eef2f6;
     }
   </style>
 </head>
 <body>
-<div class="app">
-  <!-- Sidebar -->
-  <div class="sidebar" id="sidebar">
-    <div class="logo">
-      <span style="font-size: 28px;">🧠</span>
-      <h2>MindSeek.edu</h2>
-    </div>
-    <div class="control-group">
-      <label>Kelas</label>
-      <select id="gradeSelect">
-        <option value="1">Kelas 1</option><option value="2">Kelas 2</option>
-        <option value="3">Kelas 3</option><option value="4">Kelas 4</option>
-        <option value="5">Kelas 5</option><option value="6">Kelas 6</option>
-      </select>
-    </div>
-    <div class="control-group">
-      <label>Mata Pelajaran</label>
-      <select id="subjectSelect">
-        <option value="Matematika">Matematika</option>
-        <option value="Sains_Nasional">Sains Nasional (IPAS)</option>
-        <option value="Sains_Internasional">Sains Internasional</option>
-      </select>
-    </div>
-    <div class="control-group">
-      <label>Topik</label>
-      <select id="topicSelect"></select>
-    </div>
-    <div class="control-group">
-      <label>Mode</label>
-      <select id="modeSelect">
-        <option value="pr">PR (Petunjuk)</option>
-        <option value="practice">Practice (Latihan)</option>
-        <option value="exam">Exam (Ujian)</option>
-      </select>
-    </div>
-    <div class="control-group">
-      <label>Bahasa</label>
-      <select id="languageSelect">
-        <option value="id">Bahasa Indonesia</option>
-        <option value="en">English</option>
-      </select>
-    </div>
-    <div class="control-group">
-      <label>User ID (Anak)</label>
-      <input type="text" id="userIdInput" value="demo001">
-    </div>
-    <button id="parentModeBtn" class="secondary">👪 Mode Orang Tua</button>
-    <button id="newChatBtn" class="outline">+ Chat Baru</button>
-  </div>
-
-  <!-- Main area -->
-  <div class="main">
-    <div class="chat-header">
-      <button class="menu-toggle" id="menuToggle">☰</button>
-      <div class="header-title">
-        <h3>🤖 Ai Mi</h3>
-        <div class="badge">Guru Pribadimu</div>
-      </div>
-    </div>
-    <div class="chat-messages" id="chatMessages">
-      <div class="message ai">Halo! Aku Ai Mi. Pilih kelas, mapel, topik, mode, lalu mulai belajar. Kamu bisa upload tugas (gambar/PDF) juga ✨</div>
-    </div>
-    <div class="loading" id="loadingIndicator">Ai Mi sedang mengetik</div>
-    <div class="input-area">
-      <div class="input-wrapper">
-        <input type="text" id="messageInput" placeholder="Ketik pesan atau jawaban...">
-      </div>
-      <label class="file-label">📎 Upload<input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none;"></label>
-      <button class="send-btn" id="sendBtn">Kirim</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal parent -->
-<div id="parentModal" class="modal">
-  <div class="modal-content">
-    <h3>📊 Laporan Perkembangan</h3>
-    <div id="summaryContent">Memuat...</div>
-    <button id="closeParentModal" class="secondary" style="margin-top:16px;">Tutup</button>
-  </div>
+<div id="root">
+  <!-- Auth pages akan di-render oleh JS -->
 </div>
 
 <script>
-  // ---------- CURRICULUM DATA (salin dari lib/curriculum.js) ----------
-  const matematika = {
-    "1": ["Bilangan 1-20","Penjumlahan & Pengurangan (1-10)","Bilangan 1-50","Pengukuran (Panjang/Berat)","Geometri 2D"],
-    "2": ["Bilangan 1-100","Penjumlahan/Pengurangan (1-20)","Perkalian Dasar","Pembagian Dasar","Waktu","Uang","Geometri"],
-    "3": ["Bilangan 1-1000","Operasi Hitung (+,-)","Perkalian","Pembagian","Pecahan Dasar","Bangun Datar"],
-    "4": ["Bilangan Besar","Pembagian Bersusun","Luas & Keliling","Pecahan Senilai","Pola Bilangan","Pengolahan Data","Sudut"],
-    "5": ["Operasi Hitung Pecahan","Bangun Ruang","Desimal","Persentase","Perbandingan","Pengolahan Data","Koordinat"],
-    "6": ["Bilangan Bulat","Operasi Campuran","Bangun Ruang (Volume & Luas)","Statistika","Aljabar Dasar"]
-  };
-  const sainsNasional = {
-    "1": ["Anggota Tubuh","Panca Indra","Benda di Sekitar","Tanaman","Keluarga","Aturan di Rumah/Sekolah"],
-    "2": ["Bagian Tubuh Hewan & Tumbuhan","Mengukur Benda","Cuaca","Lingkungan Sehat","Ekosistem","Sumber Daya"],
-    "3": ["Siklus Hidup","Wujud Zat & Perubahan","Norma Sosial","Energi (Cahaya & Bunyi)","Denah/Peta"],
-    "4": ["Fotosintesis","Gaya","Wujud Zat","Transformasi Energi","Sejarah Daerah","Kekayaan Budaya"],
-    "5": ["Sistem Pencernaan & Pernapasan","Ekosistem","Listrik & Magnet","Lingkungan"],
-    "6": ["Perkembangbiakan","Tata Surya","Kelistrikan","Isu Global (Iklim)","Peran Indonesia"]
-  };
-  const sainsInternasional = {
-    "1": ["Living vs Non-living","Parts of Plants","Senses","Materials"],
-    "2": ["Life Cycles","Habitats","Forces (Push/Pull)","Light"],
-    "3": ["Human Skeleton","States of Matter","Light & Shadows","Electricity (Circuits)"],
-    "4": ["Digestive System","Sound","Environment","Rocks"],
-    "5": ["Circulatory System","Forces & Friction","Space & Solar System"],
-    "6": ["Micro-organisms","Classification","Energy Transfer","Human Impact"]
-  };
-  function getTopicsForSubject(subject, grade) {
+  // ---------- Supabase Client ----------
+  const SUPABASE_URL = window.location.origin.includes('localhost') 
+    ? 'https://your-project.supabase.co' // ganti dengan URL Supabase Anda
+    : https://veahwcdhkunuyaodvuuz.supabase.co; // ganti dengan URL production
+  const SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlYWh3Y2Roa3VudXlhb2R2dXV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMjkyNDQsImV4cCI6MjA5MzYwNTI0NH0.eyy8u-LB-C4WC4HLThf8VBUlZn-Oc50IYknct6Yn-eQ; // ganti dengan anon key
+
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // State
+  let session = null;
+  let selectedStudentId = localStorage.getItem('selectedStudentId') || null;
+  let chatSessionId = localStorage.getItem('chatSessionId') || null;
+
+  // Helper untuk panggil API dengan token
+  async function apiCall(url, options = {}) {
+    const token = session?.access_token;
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+      ...options.headers
+    };
+    const res = await fetch(url, { ...options, headers });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal');
+    return data;
+  }
+
+  // Render aplikasi utama (chat)
+  function renderApp() {
+    const studentSelectorHtml = `
+      <div class="student-selector">
+        <label>Pilih Siswa:</label>
+        <select id="studentSelect"></select>
+      </div>
+    `;
+    const html = `
+      <div class="app">
+        <div class="sidebar" id="sidebar">
+          <div class="logo"><h2>🧠 MindSeek.edu</h2></div>
+          <div class="control-group"><label>Kelas</label><select id="gradeSelect">${[...Array(6)].map((_,i)=>`<option value="${i+1}">Kelas ${i+1}</option>`).join('')}</select></div>
+          <div class="control-group"><label>Mata Pelajaran</label><select id="subjectSelect"><option>Matematika</option><option>Sains_Nasional</option><option>Sains_Internasional</option></select></div>
+          <div class="control-group"><label>Topik</label><select id="topicSelect"></select></div>
+          <div class="control-group"><label>Mode</label><select id="modeSelect"><option value="pr">PR</option><option value="practice">Practice</option><option value="exam">Exam</option></select></div>
+          <div class="control-group"><label>Bahasa</label><select id="languageSelect"><option value="id">Indonesia</option><option value="en">English</option></select></div>
+          ${studentSelectorHtml}
+          <button id="parentModeBtn" class="secondary">👪 Laporan</button>
+          <button id="logoutBtn" class="secondary">🚪 Logout</button>
+        </div>
+        <div class="main">
+          <div class="chat-header"><button class="menu-toggle" id="menuToggle">☰</button><div class="header-title"><h3>🤖 Ai Mi</h3></div></div>
+          <div class="chat-messages" id="chatMessages"><div class="message ai">Halo! Pilih siswa, kelas, dan topik untuk mulai belajar.</div></div>
+          <div class="loading" id="loadingIndicator">Ai Mi sedang mengetik...</div>
+          <div class="input-area"><div class="input-wrapper"><input id="messageInput" placeholder="Ketik pesan..."></div><label class="file-label">📎 Upload<input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none;"></label><button class="send-btn" id="sendBtn">Kirim</button></div>
+        </div>
+      </div>
+      <div id="parentModal" class="modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;"><div style="background:white; max-width:90%; width:500px; border-radius:28px; padding:24px;"><h3>Laporan</h3><div id="summaryContent"></div><button id="closeModal">Tutup</button></div></div>
+    `;
+    document.getElementById('root').innerHTML = html;
+    attachChatEventListeners();
+    loadStudentsDropdown();
+    updateTopicDropdown();
+    document.getElementById('gradeSelect')?.addEventListener('change', updateTopicDropdown);
+    document.getElementById('subjectSelect')?.addEventListener('change', updateTopicDropdown);
+    document.getElementById('parentModeBtn')?.addEventListener('click', showParentSummary);
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    document.getElementById('menuToggle')?.addEventListener('click', () => document.getElementById('sidebar')?.classList.toggle('open'));
+  }
+
+  // Ambil daftar siswa dan isi dropdown
+  async function loadStudentsDropdown() {
+    try {
+      const data = await apiCall('/api/students/list');
+      const select = document.getElementById('studentSelect');
+      if (!select) return;
+      select.innerHTML = '';
+      data.students.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.text = `${s.name} (${s.grade} - ${s.curriculum})`;
+        if (selectedStudentId == s.id) opt.selected = true;
+        select.appendChild(opt);
+      });
+      select.addEventListener('change', (e) => {
+        selectedStudentId = e.target.value;
+        localStorage.setItem('selectedStudentId', selectedStudentId);
+        // Reset chat
+        chatSessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2,8);
+        localStorage.setItem('chatSessionId', chatSessionId);
+        document.getElementById('chatMessages').innerHTML = '<div class="message ai">Siswa dipilih. Mulai belajar!</div>';
+      });
+      if (data.students.length === 0) {
+        select.innerHTML = '<option value="">Belum ada siswa, tambah dulu</option>';
+      }
+    } catch(err) { console.error(err); }
+  }
+
+  // Ambil topik dari curriculum (hardcoded sama seperti sebelumnya)
+  const matematika = { "1":["Bilangan 1-20","Penjumlahan"],"2":["Bilangan 1-100"],"3":["Bilangan 1-1000"],"4":["Bilangan Besar"],"5":["Pecahan"],"6":["Bilangan Bulat"] };
+  const sainsNasional = { "1":["Anggota Tubuh"],"2":["Hewan"],"3":["Siklus Hidup"],"4":["Fotosintesis"],"5":["Sistem Pencernaan"],"6":["Perkembangbiakan"] };
+  const sainsInternasional = { "1":["Living things"],"2":["Life cycles"],"3":["Skeleton"],"4":["Digestive"],"5":["Circulatory"],"6":["Micro-organisms"] };
+  function getTopics(subject, grade) {
     if (subject === 'Matematika') return matematika[grade] || [];
     if (subject === 'Sains_Nasional') return sainsNasional[grade] || [];
     return sainsInternasional[grade] || [];
   }
-
-  // DOM elements
-  const gradeSelect = document.getElementById('gradeSelect');
-  const subjectSelect = document.getElementById('subjectSelect');
-  const topicSelect = document.getElementById('topicSelect');
-  const modeSelect = document.getElementById('modeSelect');
-  const languageSelect = document.getElementById('languageSelect');
-  const userIdInput = document.getElementById('userIdInput');
-  const chatMessages = document.getElementById('chatMessages');
-  const msgInput = document.getElementById('messageInput');
-  const sendBtn = document.getElementById('sendBtn');
-  const fileInput = document.getElementById('fileInput');
-  const loadingIndicator = document.getElementById('loadingIndicator');
-  const parentBtn = document.getElementById('parentModeBtn');
-  const parentModal = document.getElementById('parentModal');
-  const summaryContent = document.getElementById('summaryContent');
-  const closeParentModal = document.getElementById('closeParentModal');
-  const newChatBtn = document.getElementById('newChatBtn');
-  const menuToggle = document.getElementById('menuToggle');
-  const sidebar = document.getElementById('sidebar');
-
-  // State
-  let sessionId = localStorage.getItem('mindseek_sessionId');
-  if (!sessionId) {
-    sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-    localStorage.setItem('mindseek_sessionId', sessionId);
-  }
-
-  // Helper UI
-  function addMessage(text, isUser = false) {
-    const div = document.createElement('div');
-    div.className = `message ${isUser ? 'user' : 'ai'}`;
-    div.innerText = text;
-    chatMessages.appendChild(div);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-  function setLoading(loading) {
-    loadingIndicator.style.display = loading ? 'block' : 'none';
-  }
   function updateTopicDropdown() {
-    const grade = gradeSelect.value;
-    const subject = subjectSelect.value;
-    const topics = getTopicsForSubject(subject, grade);
-    topicSelect.innerHTML = '';
-    if (topics.length === 0) {
-      const opt = document.createElement('option');
-      opt.value = 'Umum';
-      opt.text = 'Umum';
-      topicSelect.appendChild(opt);
-    } else {
-      topics.forEach(t => {
-        const opt = document.createElement('option');
-        opt.value = t;
-        opt.text = t;
-        topicSelect.appendChild(opt);
-      });
+    const grade = document.getElementById('gradeSelect')?.value;
+    const subject = document.getElementById('subjectSelect')?.value;
+    const topics = getTopics(subject, grade);
+    const topicSelect = document.getElementById('topicSelect');
+    if (topicSelect) {
+      topicSelect.innerHTML = topics.map(t => `<option value="${t}">${t}</option>`).join('');
     }
   }
-  gradeSelect.addEventListener('change', updateTopicDropdown);
-  subjectSelect.addEventListener('change', updateTopicDropdown);
-  updateTopicDropdown();
 
-  // ---------- API Functions (sama seperti sebelumnya) ----------
+  // Fungsi chat dan OCR (sama seperti sebelumnya, tapi menggunakan studentId)
   async function uploadToSupabase(file) {
     const fileName = encodeURIComponent(file.name);
     const fileType = file.type;
-    const res = await fetch('/api/generate-upload-url', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fileName, fileType })
-    });
+    const res = await fetch('/api/generate-upload-url', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ fileName, fileType }) });
     if (!res.ok) throw new Error('Gagal dapat signed URL');
     const { signedUrl, filePath } = await res.json();
-    const uploadRes = await fetch(signedUrl, { method: 'PUT', body: file, headers: { 'Content-Type': fileType } });
-    if (!uploadRes.ok) throw new Error('Gagal upload ke storage');
+    await fetch(signedUrl, { method:'PUT', body: file, headers:{'Content-Type': fileType } });
     return filePath;
   }
-
-  async function compressImage(file) {
-    return new Promise((resolve, reject) => {
-      if (!file.type.startsWith('image/')) {
-        resolve(file);
-        return;
-      }
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = () => {
-          let width = img.width;
-          let height = img.height;
-          const maxDim = 1000;
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = (height * maxDim) / width;
-              width = maxDim;
-            } else {
-              width = (width * maxDim) / height;
-              height = maxDim;
-            }
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          canvas.toBlob((blob) => {
-            resolve(new File([blob], file.name, { type: file.type }));
-          }, file.type, 0.7);
-        };
-        img.onerror = reject;
-      };
-      reader.onerror = reject;
-    });
-  }
-
   async function performOCR(file) {
-    setLoading(true);
+    const loading = document.getElementById('loadingIndicator');
+    if (loading) loading.style.display = 'block';
     try {
-      let fileToUpload = file;
-      if (file.type.startsWith('image/')) {
-        fileToUpload = await compressImage(file);
-        console.log('Ukuran setelah kompresi:', (fileToUpload.size / 1024).toFixed(0), 'KB');
-      }
-      const filePath = await uploadToSupabase(fileToUpload);
-      const ocrRes = await fetch('/api/ocr', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filePath })
-      });
+      const filePath = await uploadToSupabase(file);
+      const ocrRes = await fetch('/api/ocr', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ filePath }) });
       const data = await ocrRes.json();
       if (!data.success) throw new Error(data.error);
       return data.text;
-    } catch (err) {
-      console.error(err);
-      addMessage('❌ OCR gagal: ' + err.message, false);
-      return null;
-    } finally {
-      setLoading(false);
-    }
+    } catch(err) { addMessage('❌ OCR gagal: '+err.message, false); return null; }
+    finally { if(loading) loading.style.display = 'none'; }
   }
-  
-  async function sendToAI(userMessage, ocrText = null) {
+  function addMessage(text, isUser) {
+    const container = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = `message ${isUser ? 'user' : 'ai'}`;
+    div.innerText = text;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+  async function sendToAI(userMessage, ocrText=null) {
+    const studentId = selectedStudentId;
+    if (!studentId) { addMessage('Pilih siswa terlebih dahulu', false); return; }
     let finalMsg = userMessage;
-    if (ocrText) finalMsg = userMessage ? `${userMessage}\n\n[OCR]: ${ocrText}` : `[Hasil scan]: ${ocrText}`;
-    setLoading(true);
+    if (ocrText) finalMsg = userMessage ? `${userMessage}\n\n[OCR]: ${ocrText}` : `[OCR]: ${ocrText}`;
+    const loading = document.getElementById('loadingIndicator');
+    if (loading) loading.style.display = 'block';
     try {
       const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          mode: modeSelect.value,
-          grade: gradeSelect.value,
-          topic: topicSelect.value,
-          subject: subjectSelect.value,
-          language: languageSelect.value,
+          mode: document.getElementById('modeSelect')?.value,
+          grade: document.getElementById('gradeSelect')?.value,
+          topic: document.getElementById('topicSelect')?.value,
+          subject: document.getElementById('subjectSelect')?.value,
+          language: document.getElementById('languageSelect')?.value,
           message: finalMsg,
-          sessionId,
-          userId: userIdInput.value.trim() || 'demo001'
+          sessionId: chatSessionId,
+          studentId: studentId
         })
       });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || 'Gagal');
+      if (!data.success) throw new Error(data.error);
       addMessage(data.reply, false);
-    } catch (e) {
-      addMessage('⚠️ Ai Mi sibuk, coba lagi', false);
-    } finally {
-      setLoading(false);
-    }
+    } catch(e) { addMessage('⚠️ Ai Mi sibuk', false); }
+    finally { if(loading) loading.style.display = 'none'; }
   }
-
   async function checkExamUnlock() {
-    if (modeSelect.value !== 'exam') return true;
-    const userId = userIdInput.value.trim() || 'demo001';
-    const grade = gradeSelect.value;
-    const subject = subjectSelect.value;
+    const mode = document.getElementById('modeSelect')?.value;
+    if (mode !== 'exam') return true;
+    const studentId = selectedStudentId;
+    const grade = document.getElementById('gradeSelect')?.value;
+    const subject = document.getElementById('subjectSelect')?.value;
+    const res = await fetch(`/api/exam-unlock?studentId=${studentId}&grade=${grade}&subject=${subject}`);
+    const data = await res.json();
+    if (!data.unlocked) { alert(data.message); return false; }
+    return true;
+  }
+  async function showParentSummary() {
+    const studentId = selectedStudentId;
+    if (!studentId) { alert('Pilih siswa dulu'); return; }
+    const modal = document.getElementById('parentModal');
+    const content = document.getElementById('summaryContent');
+    modal.style.display = 'flex';
+    content.innerHTML = 'Memuat...';
     try {
-      const res = await fetch(`/api/exam-unlock?userId=${userId}&grade=${grade}&subject=${subject}`);
-      const data = await res.json();
-      if (!data.unlocked) {
-        alert('Belum bisa ujian. Selesaikan topik minimal 80% mandiri.');
-        return false;
+      const data = await apiCall(`/api/learning-summary?studentId=${studentId}`);
+      let html = `<div>Total soal: ${data.summary.totalQuestions}<br>Rata2 mandiri: ${Math.round(data.summary.averageIndependence*100)}%<br>Topik dikuasai: ${data.summary.totalTopicsMastered}/${data.summary.totalTopicsPracticed}</div><hr>`;
+      html += `<h4>Progress topik</h4><ul>${data.topicsProgress.slice(0,10).map(t=>`<li>${t.topic}: ${Math.round(t.independentPercent*100)}% (${t.status})</li>`).join('')}</ul>`;
+      content.innerHTML = html;
+    } catch(e) { content.innerHTML = 'Gagal load laporan'; }
+  }
+  function attachChatEventListeners() {
+    const sendBtn = document.getElementById('sendBtn');
+    const msgInput = document.getElementById('messageInput');
+    const fileInput = document.getElementById('fileInput');
+    const fileLabel = document.querySelector('.file-label');
+    if (fileLabel) fileLabel.onclick = () => fileInput.click();
+    fileInput?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      addMessage(`📎 Upload ${file.name}...`, true);
+      const text = await performOCR(file);
+      if (text) { addMessage(`📄 Hasil scan: ${text.substring(0,150)}`, false); msgInput.value = text; }
+      fileInput.value = '';
+    });
+    sendBtn?.addEventListener('click', async () => {
+      let msg = msgInput.value.trim();
+      if (!msg) { addMessage('Tulis pesan', true); return; }
+      addMessage(msg, true);
+      if (document.getElementById('modeSelect')?.value === 'exam') {
+        const ok = await checkExamUnlock();
+        if (!ok) { msgInput.value=''; return; }
       }
-      return true;
-    } catch (e) { return false; }
+      await sendToAI(msg);
+      msgInput.value = '';
+    });
+    msgInput?.addEventListener('keypress', (e) => { if(e.key==='Enter') sendBtn?.click(); });
+    document.getElementById('closeModal')?.addEventListener('click', () => document.getElementById('parentModal').style.display='none');
   }
 
-  // File upload handler
-  fileInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    addMessage(`📎 Upload ${file.name}...`, true);
-    const ocrText = await performOCR(file);
-    if (ocrText) {
-      addMessage(`📄 Hasil scan: "${ocrText.substring(0, 150)}${ocrText.length > 150 ? '…' : ''}"`, false);
-      msgInput.value = ocrText;
-    }
-    fileInput.value = '';
-  });
-
-  sendBtn.addEventListener('click', async () => {
-    let msg = msgInput.value.trim();
-    if (!msg) {
-      addMessage('Tulis pesan atau upload file', true);
-      return;
-    }
-    addMessage(msg, true);
-    if (modeSelect.value === 'exam') {
-      const ok = await checkExamUnlock();
-      if (!ok) {
-        msgInput.value = '';
+  // Auth pages
+  function renderLogin() {
+    document.getElementById('root').innerHTML = `
+      <div class="auth-container"><div class="auth-card"><h2>Login</h2><div id="loginError" class="error-msg"></div><input type="email" id="loginEmail" placeholder="Email"><input type="password" id="loginPassword" placeholder="Password"><button id="loginBtn">Login</button><div class="link" id="toRegister">Belum punya akun? Daftar</div></div></div>
+    `;
+    document.getElementById('loginBtn').onclick = async () => {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        session = data.session;
+        localStorage.setItem('session', JSON.stringify(session));
+        await loadUserAndRender();
+      } catch(err) { document.getElementById('loginError').innerText = err.message; }
+    };
+    document.getElementById('toRegister').onclick = renderRegister;
+  }
+  function renderRegister() {
+    document.getElementById('root').innerHTML = `
+      <div class="auth-container"><div class="auth-card"><h2>Daftar Orang Tua</h2><div id="regError" class="error-msg"></div><input id="regName" placeholder="Nama"><input id="regEmail" placeholder="Email"><input id="regPassword" type="password" placeholder="Password"><button id="registerBtn">Daftar</button><div class="link" id="toLogin">Sudah punya akun? Login</div></div></div>
+    `;
+    document.getElementById('registerBtn').onclick = async () => {
+      const name = document.getElementById('regName').value;
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+      try {
+        const res = await fetch('/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, email, password }) });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+        alert('Registrasi berhasil, silakan login');
+        renderLogin();
+      } catch(err) { document.getElementById('regError').innerText = err.message; }
+    };
+    document.getElementById('toLogin').onclick = renderLogin;
+  }
+  async function loadUserAndRender() {
+    const stored = localStorage.getItem('session');
+    if (stored) session = JSON.parse(stored);
+    if (!session) { renderLogin(); return; }
+    try {
+      const data = await apiCall('/api/auth/me');
+      // Cek apakah user punya siswa, jika tidak tampilkan form tambah siswa
+      if (data.students.length === 0) {
+        document.getElementById('root').innerHTML = `<div class="auth-container"><div class="auth-card"><h2>Tambah Siswa Pertama</h2><div id="addStudentError"></div><input id="studentName" placeholder="Nama Siswa"><input id="studentEmail" placeholder="Email Siswa (opsional)"><select id="studentGrade"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select><select id="studentCurriculum"><option>nasional</option><option>internasional</option></select><input id="studentPin" type="password" placeholder="PIN (4 digit)"><button id="addStudentBtn">Tambah Siswa</button><div class="link" id="logoutLink">Logout</div></div></div>`;
+        document.getElementById('addStudentBtn').onclick = async () => {
+          const name = document.getElementById('studentName').value;
+          const email = document.getElementById('studentEmail').value;
+          const grade = document.getElementById('studentGrade').value;
+          const curriculum = document.getElementById('studentCurriculum').value;
+          const pin = document.getElementById('studentPin').value;
+          try {
+            await apiCall('/api/students/add', { method:'POST', body: JSON.stringify({ name, email, grade, curriculum, pin }) });
+            alert('Siswa ditambahkan!');
+            loadUserAndRender(); // reload
+          } catch(err) { document.getElementById('addStudentError').innerText = err.message; }
+        };
+        document.getElementById('logoutLink').onclick = logout;
         return;
       }
-    }
-    await sendToAI(msg);
-    msgInput.value = '';
-  });
-
-  msgInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendBtn.click();
-  });
-
-  // Parent mode
-  async function showLearningSummary() {
-    const userId = userIdInput.value.trim() || 'demo001';
-    summaryContent.innerHTML = 'Memuat laporan...';
-    parentModal.classList.add('visible');
-    try {
-      const res = await fetch(`/api/learning-summary?userId=${userId}`);
-      const data = await res.json();
-      let html = `<div>Total soal: ${data.summary.totalQuestions}<br>Rata2 mandiri: ${Math.round(data.summary.averageIndependence * 100)}%<br>Topik dikuasai: ${data.summary.totalTopicsMastered}/${data.summary.totalTopicsPracticed}</div><hr>`;
-      html += `<h4>Progress topik</h4><ul>${data.topicsProgress.slice(0, 10).map(t => `<li><strong>${t.topic}</strong> (kelas ${t.grade}) : ${Math.round(t.independentPercent * 100)}% (${t.status})</li>`).join('')}</ul>`;
-      html += `<h4>Butuh pendampingan: ${data.pendingGuidance.length}</h4><ul>${data.pendingGuidance.slice(0, 5).map(g => `<li>${g.questionText.substring(0, 80)}</li>`).join('')}</ul>`;
-      summaryContent.innerHTML = html;
-    } catch (e) {
-      summaryContent.innerHTML = 'Gagal memuat laporan';
-    }
+      renderApp();
+    } catch(err) { console.error(err); renderLogin(); }
   }
-  parentBtn.addEventListener('click', showLearningSummary);
-  closeParentModal.addEventListener('click', () => parentModal.classList.remove('visible'));
-
-  // New chat: reset sessionId dan clear chat
-  newChatBtn.addEventListener('click', () => {
-    sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-    localStorage.setItem('mindseek_sessionId', sessionId);
-    chatMessages.innerHTML = '<div class="message ai">Chat baru dimulai! Aku Ai Mi, siap membantu belajar ✨</div>';
-  });
-
-  // Toggle sidebar di mobile
-  menuToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('open');
-  });
-  // Tutup sidebar saat klik di luar (optional)
-  document.addEventListener('click', (e) => {
-    if (window.innerWidth <= 768 && sidebar.classList.contains('open') && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-      sidebar.classList.remove('open');
-    }
-  });
+  async function logout() {
+    await supabase.auth.signOut();
+    localStorage.removeItem('session');
+    localStorage.removeItem('selectedStudentId');
+    session = null;
+    renderLogin();
+  }
+  window.onload = () => {
+    loadUserAndRender();
+  };
 </script>
 </body>
 </html>
